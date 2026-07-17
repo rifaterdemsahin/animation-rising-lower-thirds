@@ -23,16 +23,17 @@
     </p>
 
     <div class="card-panel">
-      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended three
-      times (2026-07-18, see §8–11 below). Scope decided via clarifying
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended four
+      times (2026-07-18, see §8–12 below). Scope decided via clarifying
       questions on 2026-07-17: new standalone page, background image
       pre-generated as a static asset, sequential staged reveal (Cluster →
       Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes example
       became the shared default content across <strong>all three outputs</strong>
       (§8), a full project reference was added (§9), the background was
-      replaced with a content-matched version plus standing rules (§10), and a
+      replaced with a content-matched version plus standing rules (§10), a
       live-API 404 bug at the bare root URL was fixed with a regression test
-      added (§11).</p>
+      added (§11), and <code>explainer.html</code> gained a live parameters
+      table (with x/y image positions) plus a URL/agent-prompt generator (§12).</p>
     </div>
 
     <div class="card-panel">
@@ -385,6 +386,41 @@
         than the local checkout, deliberately, so a 404-on-deploy class of bug
         like this one gets caught by CI going forward instead of only by a
         user noticing.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>📐 12. Addendum (2026-07-18, once more): parameters table + URL/prompt generator</h2>
+      <p><code>explainer.html</code> gained two new panels:</p>
+      <ul>
+        <li>
+          <strong>"📐 All parameters"</strong> — a live table of each stage's
+          emoji, text, entrance delay, and its <strong>x/y/width/height on the
+          1920×1080 background image</strong>. Useful for recreating the
+          composition in another tool (Canva, Figma, a video editor) without
+          guessing where to place each label over the background PNG.
+          Positions are computed by mounting the current config into a hidden
+          clone of the stage sized to exactly 1920×1080 (not the viewport),
+          then reading <code>getBoundingClientRect()</code> — so the resulting
+          pixel values are the image-space coordinates directly, with no
+          scaling math and no dependency on the visitor's actual screen size.
+        </li>
+        <li>
+          <strong>"🎛️ Customize &amp; generate"</strong> — six input fields
+          (emoji/text × 3 stages), seeded from URL params or
+          <code>LowerThirds.PRESETS.kubernetes</code>. Editing any field
+          live-updates the parameters table above, the generated URL, and a
+          ready-to-paste AI-agent prompt below (both with 📋 copy buttons,
+          same pattern as <code>mcp-guide.html</code>'s prompt blocks) — and
+          the Play button now plays whatever's currently in the fields, not
+          just the page's initial config.
+        </li>
+      </ul>
+      <p>
+        This turns the page into a small standalone tool: type any three
+        labels, see exactly where they'll land on the background image, get a
+        shareable URL or agent-prompt for the result, and preview it — all
+        without leaving the page.
       </p>
     </div>
   </main>

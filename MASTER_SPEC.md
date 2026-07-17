@@ -1,13 +1,15 @@
 # Master Spec: Kubernetes Flow Explainer (3rd output + engine generalization)
 
-Status: **implemented** (2026-07-17), **extended three times** (2026-07-18, see
-§8-11). Scope decided via clarifying questions on 2026-07-17: new standalone
+Status: **implemented** (2026-07-17), **extended four times** (2026-07-18, see
+§8-12). Scope decided via clarifying questions on 2026-07-17: new standalone
 page, background image pre-generated as a static asset, sequential staged
 reveal (Cluster → Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes
 example became the shared default content across all three outputs (§8), a
 full project reference was added (§9), the background was replaced with a
-content-matched version plus standing rules (§10), and a live-API 404 bug at
-the bare root URL was fixed with a regression test added (§11).
+content-matched version plus standing rules (§10), a live-API 404 bug at the
+bare root URL was fixed with a regression test added (§11), and
+`explainer.html` gained a live parameters table (with x/y image positions)
+plus a URL/agent-prompt generator (§12).
 
 This spec sits alongside `problem.md` (which remains the unmodified motion/visual
 contract for the base 2-card "Elastic Rise" spring) and extends the toolbox described
@@ -390,3 +392,30 @@ addition to its existing local-static-site checks — this is the only part of
 the test suite that depends on external, deployed state rather than the local
 checkout, deliberately, so a 404-on-deploy class of bug like this one gets
 caught by CI going forward instead of only by a user noticing.
+
+---
+
+## 12. Addendum (2026-07-18, once more): parameters table + URL/prompt generator
+
+`explainer.html` gained two new panels:
+
+- **"📐 All parameters"** — a live table of each stage's emoji, text, entrance
+  delay, and its **x/y/width/height on the 1920×1080 background image**
+  (`assets/k8s-explainer-background.png`'s native resolution). Useful for
+  recreating the composition in another tool (Canva, Figma, a video editor)
+  without guessing where to place each label over the background PNG.
+  Positions are computed by mounting the current config into a hidden clone of
+  the stage sized to exactly 1920×1080 (not the viewport), then reading
+  `getBoundingClientRect()` — so the resulting pixel values are the image-space
+  coordinates directly, with no scaling math and no dependency on the visitor's
+  actual screen size.
+- **"🎛️ Customize & generate"** — six input fields (emoji/text × 3 stages),
+  seeded from URL params or `LowerThirds.PRESETS.kubernetes`. Editing any field
+  live-updates the parameters table above, the generated `?emoji1=&text1=...`
+  URL, and a ready-to-paste AI-agent prompt below (both with 📋 copy buttons,
+  same pattern as `mcp-guide.html`'s prompt blocks) — and the Play button now
+  plays whatever's currently in the fields, not just the page's initial config.
+
+This turns the page into a small standalone tool: type any three labels, see
+exactly where they'll land on the background image, get a shareable URL or
+agent-prompt for the result, and preview it — all without leaving the page.

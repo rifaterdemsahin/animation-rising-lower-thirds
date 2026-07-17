@@ -108,13 +108,67 @@ Save to: assets/k8s-explainer-background.png</pre>
     </div>
 
     <div class="card-panel">
+      <h2>📐 All parameters</h2>
+      <p>
+        Everything needed to recreate this exact scene: each stage's emoji, text,
+        entrance delay, and its <strong>x/y position on the 1920×1080 background
+        image</strong> — useful if you're rebuilding this composition in another
+        tool (Canva, Figma, a video editor) and need to know exactly where to place
+        each label over the background PNG. Positions are computed live from the
+        fields below, at the background image's native resolution (not the
+        viewport's), so they stay correct regardless of screen size.
+      </p>
+      <div style="overflow-x: auto;">
+        <table id="params-table">
+          <thead>
+            <tr><th>Stage</th><th>Emoji</th><th>Text</th><th>Delay (ms)</th><th>X (px)</th><th>Y (px)</th><th>Width (px)</th><th>Height (px)</th></tr>
+          </thead>
+          <tbody id="params-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>🎛️ Customize &amp; generate</h2>
+      <p>
+        Edit any field to update the parameters table above, the Play button, and
+        the generated URL/prompt below — all live, no page reload.
+      </p>
+      <div class="field-row">
+        <label for="emoji1">Emoji 1</label>
+        <input type="text" id="emoji1">
+        <label for="text1">Text 1</label>
+        <input type="text" id="text1">
+        <label for="emoji2">Emoji 2</label>
+        <input type="text" id="emoji2">
+        <label for="text2">Text 2</label>
+        <input type="text" id="text2">
+        <label for="emoji3">Emoji 3</label>
+        <input type="text" id="emoji3">
+        <label for="text3">Text 3</label>
+        <input type="text" id="text3">
+      </div>
+    </div>
+
+    <div class="card-panel">
       <h2>🔗 Reusable as a URL API</h2>
       <p>
         Skip the defaults: override each stage's icon/text, and/or the displayed
         background prompt, via query params — add <code>&amp;autoplay=1</code> to
-        run the sequence immediately on load.
+        run the sequence immediately on load. Reflects whatever's currently in the
+        fields above.
       </p>
-      <pre id="url-example"></pre>
+      <div class="prompt-block">
+        <pre id="url-example"></pre>
+        <button class="copy-prompt-btn" type="button" data-copy-target="url-example">📋 Copy</button>
+      </div>
+
+      <h3>🗣️ Generated prompt for an AI agent</h3>
+      <p>Paste this straight into an agent with browser tools to have it run the current configuration and describe what happens.</p>
+      <div class="prompt-block">
+        <pre id="agent-prompt-example"></pre>
+        <button class="copy-prompt-btn" type="button" data-copy-target="agent-prompt-example">📋 Copy</button>
+      </div>
     </div>
   </main>
 
@@ -122,7 +176,7 @@ Save to: assets/k8s-explainer-background.png</pre>
   <script>
     (function () {
       // Shared with video-recorded.html/video-live.html via LowerThirds.PRESETS —
-      // cloned per-card so URL-param overrides below don't mutate the shared preset.
+      // cloned per-card so field edits below don't mutate the shared preset.
       var DEFAULT_CARDS = LowerThirds.PRESETS.kubernetes.cards.map(function (card) {
         return { icon: card.icon, text: card.text, delayMs: card.delayMs };
       });
@@ -131,30 +185,163 @@ Save to: assets/k8s-explainer-background.png</pre>
         "External traffic enters through the Ingress Gateway, which matches incoming requests against routing rules.",
         "The Gateway forwards the matched request to the target Pod running the application.",
       ];
+      // Native resolution of assets/k8s-explainer-background.png — parameter
+      // x/y/width/height below are computed in this coordinate space, not the
+      // viewport's, so they stay correct regardless of screen size (see §1 of
+      // the task this panel was built for: "include ... x y locations on the
+      // image").
+      var IMAGE_W = 1920;
+      var IMAGE_H = 1080;
 
       var params = new URLSearchParams(window.location.search);
-      var hasCardOverride = ["text1", "text2", "text3", "emoji1", "emoji2", "emoji3"].some(function (key) {
-        return params.has(key);
+      var fields = [1, 2, 3].reduce(function (acc, n) {
+        acc["emoji" + n] = document.getElementById("emoji" + n);
+        acc["text" + n] = document.getElementById("text" + n);
+        return acc;
+      }, {});
+
+      // Seed the input fields from URL params (if given) or the Kubernetes
+      // preset, so the form always reflects what's about to play.
+      [1, 2, 3].forEach(function (n) {
+        var card = DEFAULT_CARDS[n - 1];
+        fields["emoji" + n].value = params.get("emoji" + n) || card.icon;
+        fields["text" + n].value = params.get("text" + n) || card.text;
       });
 
-      var STAGE_CONFIG = {
-        cards: DEFAULT_CARDS.map(function (card, i) {
-          var n = i + 1;
+      function currentConfig() {
+        return {
+          cards: [1, 2, 3].map(function (n) {
+            return {
+              icon: fields["emoji" + n].value,
+              text: fields["text" + n].value,
+              delayMs: DEFAULT_CARDS[n - 1].delayMs,
+            };
+          }),
+        };
+      }
+
+      function isDefaultContent(cards) {
+        return cards.every(function (card, i) {
+          return card.icon === DEFAULT_CARDS[i].icon && card.text === DEFAULT_CARDS[i].text;
+        });
+      }
+
+      function updateCaptions(config) {
+        var useDefault = isDefaultContent(config.cards);
+        config.cards.forEach(function (card, i) {
+          var text = useDefault ? DEFAULT_CAPTIONS[i] : (card.icon + " " + card.text);
+          document.getElementById("caption-" + (i + 1) + "-text").textContent = text;
+        });
+      }
+
+      // Measures each card's rest position by mounting the current config into
+      // a hidden clone of the stage, sized to the background image's exact
+      // native resolution (1920x1080) rather than the viewport — so the
+      // resulting getBoundingClientRect() values ARE the image-space pixel
+      // coordinates directly, with no scaling math and no dependency on how
+      // wide the visible page happens to be rendered.
+      function measureCardPositions(config) {
+        var hidden = document.createElement("div");
+        hidden.className = "lt-stage lt-explainer-bg";
+        hidden.style.position = "fixed";
+        hidden.style.left = "-99999px";
+        hidden.style.top = "0";
+        hidden.style.width = IMAGE_W + "px";
+        hidden.style.height = IMAGE_H + "px";
+        hidden.style.aspectRatio = "auto";
+        document.body.appendChild(hidden);
+
+        var mountDiv = document.createElement("div");
+        hidden.appendChild(mountDiv);
+        var ctrl = LowerThirds.mount(mountDiv, config);
+        ctrl.stop();
+
+        var cardEls = mountDiv.querySelectorAll(".lt-card");
+        cardEls.forEach(function (el) {
+          el.style.transition = "none";
+          el.style.transform = "none";
+          el.style.opacity = "1";
+        });
+
+        var hiddenRect = hidden.getBoundingClientRect();
+        var positions = Array.prototype.map.call(cardEls, function (el) {
+          var r = el.getBoundingClientRect();
           return {
-            icon: params.get("emoji" + n) || card.icon,
-            text: params.get("text" + n) || card.text,
-            delayMs: card.delayMs,
+            x: Math.round(r.left - hiddenRect.left),
+            y: Math.round(r.top - hiddenRect.top),
+            w: Math.round(r.width),
+            h: Math.round(r.height),
           };
-        }),
-      };
+        });
 
-      var CAPTIONS = DEFAULT_CAPTIONS.map(function (text, i) {
-        if (!hasCardOverride) return text;
-        var card = STAGE_CONFIG.cards[i];
-        return card.icon + " " + card.text;
-      });
-      CAPTIONS.forEach(function (text, i) {
-        document.getElementById("caption-" + (i + 1) + "-text").textContent = text;
+        document.body.removeChild(hidden);
+        return positions;
+      }
+
+      function renderParamsTable(config) {
+        var positions = measureCardPositions(config);
+        var body = document.getElementById("params-table-body");
+        body.innerHTML = "";
+        config.cards.forEach(function (card, i) {
+          var pos = positions[i] || { x: 0, y: 0, w: 0, h: 0 };
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td>" + (i + 1) + "</td>" +
+            "<td>" + escapeHtml(card.icon) + "</td>" +
+            "<td>" + escapeHtml(card.text) + "</td>" +
+            "<td><code>" + card.delayMs + "</code></td>" +
+            "<td><code>" + pos.x + "</code></td>" +
+            "<td><code>" + pos.y + "</code></td>" +
+            "<td><code>" + pos.w + "</code></td>" +
+            "<td><code>" + pos.h + "</code></td>";
+          body.appendChild(tr);
+        });
+      }
+
+      function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function buildUrl(config) {
+        var url = new URL(window.location.href);
+        url.search = "";
+        config.cards.forEach(function (card, i) {
+          var n = i + 1;
+          url.searchParams.set("emoji" + n, card.icon);
+          url.searchParams.set("text" + n, card.text);
+        });
+        url.searchParams.set("autoplay", "1");
+        return url.toString();
+      }
+
+      function updateGeneratedUrl(config) {
+        document.getElementById("url-example").textContent = buildUrl(config);
+      }
+
+      function updateGeneratedPrompt(config) {
+        var url = buildUrl(config);
+        var stages = config.cards.map(function (card, i) {
+          return (i + 1) + ". " + card.icon + " " + card.text;
+        }).join("\n");
+        document.getElementById("agent-prompt-example").textContent =
+          "Using your browser tools, navigate to\n" + url + "\n" +
+          "and describe what happens on screen as each of these three stages rises:\n" +
+          stages;
+      }
+
+      function refresh() {
+        var config = currentConfig();
+        updateCaptions(config);
+        renderParamsTable(config);
+        updateGeneratedUrl(config);
+        updateGeneratedPrompt(config);
+      }
+
+      [1, 2, 3].forEach(function (n) {
+        fields["emoji" + n].addEventListener("input", refresh);
+        fields["text" + n].addEventListener("input", refresh);
       });
 
       if (params.has("bgprompt")) {
@@ -201,8 +388,10 @@ Save to: assets/k8s-explainer-background.png</pre>
       }
 
       function playSequence() {
+        var config = currentConfig();
         clearTimers();
         resetCaptionsAndArrows();
+        updateCaptions(config);
         if (controller) controller.stop();
 
         // Reset the background to its dim/zoomed-out starting state, force a
@@ -211,13 +400,13 @@ Save to: assets/k8s-explainer-background.png</pre>
         bgLayer.classList.remove("lt-bg-landed");
         void bgLayer.offsetWidth;
 
-        controller = LowerThirds.mount(cardsMount, STAGE_CONFIG);
+        controller = LowerThirds.mount(cardsMount, config);
         bgLayer.classList.add("lt-bg-landed");
 
         playBtn.disabled = true;
         playBtn.textContent = "▶ Playing…";
 
-        STAGE_CONFIG.cards.forEach(function (card, i) {
+        config.cards.forEach(function (card, i) {
           var t = setTimeout(function () {
             var caption = document.getElementById("caption-" + (i + 1));
             if (caption) caption.classList.add("lt-visible");
@@ -225,10 +414,10 @@ Save to: assets/k8s-explainer-background.png</pre>
           timers.push(t);
         });
 
-        timers.push(setTimeout(function () { revealArrow("arrow-1-2", 0, 1); }, STAGE_CONFIG.cards[1].delayMs + 1000));
-        timers.push(setTimeout(function () { revealArrow("arrow-2-3", 1, 2); }, STAGE_CONFIG.cards[2].delayMs + 1000));
+        timers.push(setTimeout(function () { revealArrow("arrow-1-2", 0, 1); }, config.cards[1].delayMs + 1000));
+        timers.push(setTimeout(function () { revealArrow("arrow-2-3", 1, 2); }, config.cards[2].delayMs + 1000));
 
-        var totalDuration = LowerThirds.computeDuration(STAGE_CONFIG.cards) + 1200;
+        var totalDuration = LowerThirds.computeDuration(config.cards) + 1200;
         timers.push(setTimeout(function () {
           playBtn.disabled = false;
           playBtn.textContent = "⟳ Replay";
@@ -315,16 +504,20 @@ Save to: assets/k8s-explainer-background.png</pre>
 
       document.getElementById("download-btn").addEventListener("click", downloadStandaloneHtml);
 
-      var exampleUrl = new URL(window.location.href);
-      exampleUrl.search = "";
-      exampleUrl.searchParams.set("emoji1", "🖥️");
-      exampleUrl.searchParams.set("text1", "Kubernetes Test Cluster");
-      exampleUrl.searchParams.set("emoji2", "🚪");
-      exampleUrl.searchParams.set("text2", "Ingress Gateway");
-      exampleUrl.searchParams.set("emoji3", "📦");
-      exampleUrl.searchParams.set("text3", "Pod");
-      exampleUrl.searchParams.set("autoplay", "1");
-      document.getElementById("url-example").textContent = exampleUrl.toString();
+      document.querySelectorAll(".copy-prompt-btn[data-copy-target]").forEach(function (btn) {
+        var target = document.getElementById(btn.getAttribute("data-copy-target"));
+        var originalLabel = btn.textContent;
+        btn.addEventListener("click", function () {
+          navigator.clipboard.writeText(target.textContent).then(function () {
+            btn.textContent = "✅ Copied!";
+          }, function () {
+            btn.textContent = "❌ Copy failed";
+          });
+          setTimeout(function () { btn.textContent = originalLabel; }, 1800);
+        });
+      });
+
+      refresh();
 
       if (params.get("autoplay") === "1") {
         playSequence();
