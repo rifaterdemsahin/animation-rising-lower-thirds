@@ -277,6 +277,7 @@ rather than duplicating it, so it can't silently drift out of sync.
 | Video-production tooling decisions (ffmpeg skill, why not Remotion) | `recommendation.html` |
 | This feature's design/implementation record | this file / `master-spec.html` (you are here) |
 | Original Canva reference presentation | `canva.md` |
+| Manual/visual verification checklist (complements `tests/test_pages.py`) | [`SANITY_CHECK.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/SANITY_CHECK.md) |
 
 **Site-wide features not covered above, added incrementally across sessions and
 easy to lose track of** (all implemented, all live):
