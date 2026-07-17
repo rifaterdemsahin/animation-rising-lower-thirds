@@ -11,6 +11,40 @@ Problem Defined : https://github.com/rifaterdemsahin/animation-rising-lower-thir
 
 - Example : Real Jobs / Real People
 
+## Domain
+
+Broadcast/live-stream motion graphics — specifically **lower thirds**, the
+text+icon bars overlaid near the bottom of a video frame to identify a
+speaker, role, or topic. The work here sits at the intersection of:
+- video editing (a reusable graphic for a recorded timeline),
+- live production (a real-time browser-source overlay for streaming), and
+- front-end animation (the actual spring-motion implementation, in CSS/Canvas).
+
+## Problem
+
+Hand-keyframing the same two-card rising animation in a video editor every
+time the copy changes ("Real Jobs / Real People" today, something else
+tomorrow) doesn't scale — it has to be redone by hand per project. The full
+motion/visual spec is in
+[problem.md](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md):
+two rounded cards, an icon + serif label each, rising from off-screen with a
+damped-spring bounce, staggered 150ms apart.
+
+## Requirements
+
+- **Type the text, get the animation** — no manual keyframing per project.
+- **Visual spec compliance** — dual rounded rectangles (24–30px radius,
+  `#0B1B1E` @ 85% opacity), cyan icon + serif text, 24px gap, per `problem.md`.
+- **Motion spec compliance** — damped harmonic rise (ζ=0.5), opacity to 100%
+  by frame 8, card 2 staggered +150ms behind card 1.
+- **Two output modes**: an actual downloadable video file (for editing), and
+  a transparent live overlay (for OBS/vMix streaming) — from one shared
+  animation engine, not two separate implementations.
+- **Usable two ways**: click through the UI, or drive it headlessly via a URL
+  query-param API or a plain JS API — see `MCP_GUIDE.md`.
+- **No build step** — plain static HTML/CSS/JS, deployable as-is to GitHub
+  Pages.
+
 
 Visual :
 

@@ -23,6 +23,19 @@
     </p>
 
     <div class="card-panel">
+      <h2>Domain</h2>
+      <p>
+        Broadcast/live-stream motion graphics — specifically <strong>lower
+        thirds</strong>, the text+icon bars overlaid near the bottom of a
+        video frame to identify a speaker, role, or topic. This sits at the
+        intersection of video editing (a reusable graphic for a recorded
+        timeline), live production (a real-time browser-source overlay for
+        streaming), and front-end animation (the spring-motion implementation
+        itself, in CSS/Canvas).
+      </p>
+    </div>
+
+    <div class="card-panel">
       <h2>The problem</h2>
       <p>
         <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>
@@ -38,6 +51,33 @@
         alt="Reference screenshot of the Real Jobs / Real People rising lower-third cards"
         style="max-width: 100%; border-radius: 12px; display: block;"
       >
+    </div>
+
+    <div class="card-panel">
+      <h2>Requirements</h2>
+      <ul>
+        <li><strong>Type the text, get the animation</strong> — no manual keyframing per project.</li>
+        <li>
+          <strong>Visual spec compliance</strong> — dual rounded rectangles (24–30px radius,
+          <code>#0B1B1E</code> @ 85% opacity), cyan icon + serif text, 24px gap, per
+          <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>.
+        </li>
+        <li>
+          <strong>Motion spec compliance</strong> — damped harmonic rise (ζ=0.5), opacity to
+          100% by frame 8, card 2 staggered +150ms behind card 1.
+        </li>
+        <li>
+          <strong>Two output modes</strong> from one shared animation engine: an actual
+          downloadable video file (for editing), and a transparent live overlay (for
+          OBS/vMix streaming).
+        </li>
+        <li>
+          <strong>Usable two ways</strong> — click through the UI, or drive it headlessly via
+          a URL query-param API or a plain JS API (see
+          <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>).
+        </li>
+        <li><strong>No build step</strong> — plain static HTML/CSS/JS, deployable as-is to GitHub Pages.</li>
+      </ul>
     </div>
 
     <div class="card-panel">
