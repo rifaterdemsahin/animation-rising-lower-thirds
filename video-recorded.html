@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recorded Video — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    #render-canvas {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #06100f;
+      border-radius: 16px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Recorded Video</h1>
+    <p>
+      Type the two lower-third labels, hit <strong>Record</strong>, and this page
+      renders the same spring-rise animation to a <code>&lt;canvas&gt;</code>,
+      captures it frame-by-frame with <code>MediaRecorder</code>, and hands you a
+      downloadable video file — no editor round-trip needed.
+    </p>
+
+    <div class="card-panel">
+      <div class="field-row">
+        <label for="icon1">Icon 1</label>
+        <input type="text" id="icon1" value="💼">
+        <label for="text1">Text 1</label>
+        <input type="text" id="text1" value="Real Jobs">
+        <label for="icon2">Icon 2</label>
+        <input type="text" id="icon2" value="👤">
+        <label for="text2">Text 2</label>
+        <input type="text" id="text2" value="Real People">
+      </div>
+      <button class="button secondary" id="preview-btn">▶ Preview</button>
+      <button class="button" id="record-btn">⏺ Record &amp; Download</button>
+      <span id="status" style="margin-left: 12px; color: var(--text-dim); font-size: 14px;"></span>
+    </div>
+
+    <div class="card-panel">
+      <canvas id="render-canvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="card-panel" id="result-panel" style="display: none;">
+      <h2>Output</h2>
+      <video id="result-video" controls style="width: 100%; border-radius: 12px;"></video>
+      <p><a id="download-link" class="button" download="lower-thirds.webm">Download video</a></p>
+      <p>
+        Need a different container/codec (e.g. MP4 for an editor that won't take WebM)?
+        The project's <code>ffmpeg-usage</code> skill can convert it —
+        see <a href="recommendation.html">recommendation.html</a>.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>Use it as a toolbox, not just a form</h2>
+      <p>This page is a thin UI over two reusable APIs — script it instead of clicking through:</p>
+      <h3>URL API</h3>
+      <p>
+        Pass the labels as query params and add <code>&amp;autorecord=1</code>: the page
+        fills the form, runs the animation, records it, and shows the download link with
+        no interaction needed.
+      </p>
+      <pre id="url-example"></pre>
+      <h3>JS API</h3>
+      <p>Call the engine and recorder directly from your own script:</p>
+      <pre>&lt;script src="assets/js/lower-thirds.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  var config = {
+    card1: { icon: "💼", text: "Real Jobs" },
+    card2: { icon: "👤", text: "Real People" },
+  };
+
+  // Drive any canvas yourself, frame by frame:
+  LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, tMs, config, restY);
+
+  // Or reuse this page's recorder end-to-end:
+  window.LowerThirdsRecorder.record(canvas, config).then(function (blob) {
+    // blob is a video/webm Blob — save it, upload it, pipe it into ffmpeg, etc.
+  });
+&lt;/script&gt;</pre>
+    </div>
+  </main>
+
+  <script src="assets/js/lower-thirds.js"></script>
+  <script>
+    /**
+     * LowerThirdsRecorder — reusable API for rendering+recording a config to a
+     * video/webm Blob on any canvas. Used by this page's own buttons below, and
+     * callable directly from other scripts (see the "JS API" panel on-page).
+     */
+    (function () {
+      function runAnimation(ctx, canvas, config, onFrame, onDone) {
+        var rafId = null;
+        var start = null;
+
+        function frame(now) {
+          if (start === null) start = now;
+          var t = now - start;
+          LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, t, config, canvas.height - 160);
+          if (onFrame) onFrame(t);
+          if (t < LowerThirds.DURATION_MS) {
+            rafId = requestAnimationFrame(frame);
+          } else {
+            rafId = null;
+            if (onDone) onDone();
+          }
+        }
+        rafId = requestAnimationFrame(frame);
+        return function stop() {
+          if (rafId !== null) cancelAnimationFrame(rafId);
+        };
+      }
+
+      function record(canvas, config) {
+        return new Promise(function (resolve, reject) {
+          if (typeof MediaRecorder === "undefined") {
+            reject(new Error("MediaRecorder isn't supported in this browser."));
+            return;
+          }
+          var ctx = canvas.getContext("2d");
+          var stream = canvas.captureStream(30);
+          var mimeType = "video/webm;codecs=vp9";
+          if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm";
+          var recorder = new MediaRecorder(stream, { mimeType: mimeType });
+          var chunks = [];
+
+          recorder.ondataavailable = function (e) {
+            if (e.data.size > 0) chunks.push(e.data);
+          };
+          recorder.onstop = function () {
+            resolve(new Blob(chunks, { type: mimeType }));
+          };
+          recorder.onerror = reject;
+
+          recorder.start();
+          runAnimation(ctx, canvas, config, null, function () {
+            recorder.stop();
+          });
+        });
+      }
+
+      window.LowerThirdsRecorder = { record: record, runAnimation: runAnimation };
+    })();
+  </script>
+  <script>
+    (function () {
+      var canvas = document.getElementById("render-canvas");
+      var ctx = canvas.getContext("2d");
+      var statusEl = document.getElementById("status");
+
+      function fieldConfig() {
+        return {
+          card1: {
+            icon: document.getElementById("icon1").value,
+            text: document.getElementById("text1").value,
+          },
+          card2: {
+            icon: document.getElementById("icon2").value,
+            text: document.getElementById("text2").value,
+          },
+        };
+      }
+
+      function showResult(blob) {
+        var url = URL.createObjectURL(blob);
+        var video = document.getElementById("result-video");
+        var link = document.getElementById("download-link");
+        video.src = url;
+        link.href = url;
+        document.getElementById("result-panel").style.display = "block";
+        statusEl.textContent = "Recording ready.";
+      }
+
+      function recordCurrentFields() {
+        statusEl.textContent = "Recording…";
+        LowerThirdsRecorder.record(canvas, fieldConfig()).then(showResult, function (err) {
+          statusEl.textContent = err.message;
+        });
+      }
+
+      document.getElementById("preview-btn").addEventListener("click", function () {
+        statusEl.textContent = "Previewing…";
+        LowerThirdsRecorder.runAnimation(ctx, canvas, fieldConfig(), null, function () {
+          statusEl.textContent = "Preview done.";
+        });
+      });
+
+      document.getElementById("record-btn").addEventListener("click", recordCurrentFields);
+
+      var params = new URLSearchParams(window.location.search);
+      var exampleUrl = new URL(window.location.href);
+      exampleUrl.search = "";
+      exampleUrl.searchParams.set("icon1", "💼");
+      exampleUrl.searchParams.set("text1", "Real Jobs");
+      exampleUrl.searchParams.set("icon2", "👤");
+      exampleUrl.searchParams.set("text2", "Real People");
+      exampleUrl.searchParams.set("autorecord", "1");
+      document.getElementById("url-example").textContent = exampleUrl.toString();
+
+      if (params.has("icon1")) document.getElementById("icon1").value = params.get("icon1");
+      if (params.has("text1")) document.getElementById("text1").value = params.get("text1");
+      if (params.has("icon2")) document.getElementById("icon2").value = params.get("icon2");
+      if (params.has("text2")) document.getElementById("text2").value = params.get("text2");
+      if (params.get("autorecord") === "1") {
+        recordCurrentFields();
+      }
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+/* Rising Lower Thirds — card visuals (DOM/CSS renderer, per problem.md spec) */
+
+.lt-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #06100f;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12%;
+}
+
+.lt-stage.lt-transparent {
+  background: repeating-conic-gradient(#0f1a1a 0% 25%, #0b1414 0% 50%) 50% / 24px 24px;
+}
+
+.lt-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.lt-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(11, 27, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 27px;
+  padding: 14px 28px;
+  white-space: nowrap;
+  transform: translateY(120px);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.lt-icon {
+  color: #00d2d2;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.lt-text {
+  color: #ffffff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  line-height: 1;
+}

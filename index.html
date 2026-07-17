@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rising Lower Thirds — Animation Helper</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/lower-thirds.css">
+</head>
+<body>
+  <main>
+    <h1>Rising Lower Thirds</h1>
+    <p>
+      A practical animation helper for the twin <strong>"Real Jobs / Real People"</strong>
+      lower-third cards: two rounded cards that spring up from off-screen, bounce, and
+      settle into place, with the second card staggered <code>150ms</code> behind the first.
+      The full motion spec lives in
+      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>.
+    </p>
+
+    <div class="card-panel">
+      <h2>What we're trying to do</h2>
+      <p>
+        Instead of hand-keyframing this animation in a video editor every time the copy
+        changes, you <strong>type the text you want for each lower third</strong> and the
+        same animation engine (<code>assets/js/lower-thirds.js</code>) renders it for you.
+        One engine, two outputs:
+      </p>
+      <ul>
+        <li>
+          <strong><a href="video-recorded.html">video-recorded.html</a></strong> —
+          type your text, render it to a canvas, and export an actual downloadable
+          video file (WebM/MP4) you can drop into an edit timeline.
+        </li>
+        <li>
+          <strong><a href="video-live.html">video-live.html</a></strong> —
+          the same animation as a lightweight, transparent-background overlay you can
+          point OBS/vMix at for a live stream, driven by URL query params or the JS API
+          directly.
+        </li>
+      </ul>
+      <p>
+        This is a small <strong>toolbox</strong>, not just two forms: every page works
+        by clicking through the UI, but every page is also drivable without touching
+        the UI at all — a URL query-param API for scripting/automation, and a plain JS
+        API (<code>LowerThirds</code> / <code>LowerThirdsRecorder</code>) for embedding
+        the engine in your own page. Each page documents both under an
+        "API"/"Reusable" panel.
+      </p>
+      <p>
+        See <a href="recommendation.html">recommendation.html</a> for suggested next
+        steps, informed by the video-production tooling evaluated for this project.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>Preview</h2>
+      <div class="lt-stage" id="preview-stage"></div>
+      <p><em>Live preview using the shared animation engine — refresh to replay.</em></p>
+    </div>
+
+    <div class="card-panel">
+      <h2>Environment</h2>
+      <ul>
+        <li>Use it in a video — <a href="video-recorded.html">video-recorded.html</a></li>
+        <li>Use it in a live session — <a href="video-live.html">video-live.html</a></li>
+      </ul>
+    </div>
+  </main>
+
+  <script src="assets/js/lower-thirds.js"></script>
+  <script>
+    LowerThirds.mount(document.getElementById("preview-stage"), {
+      card1: { icon: "💼", text: "Real Jobs" },
+      card2: { icon: "👤", text: "Real People" },
+    });
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

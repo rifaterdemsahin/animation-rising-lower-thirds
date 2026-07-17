@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Overlay — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/lower-thirds.css">
+  <style>
+    /* In autoplay/overlay mode, strip the site chrome so this page is a clean
+       browser-source: real transparent background, no nav/footer, no form. */
+    body.lt-overlay-mode { background: transparent; }
+    body.lt-overlay-mode .site-nav,
+    body.lt-overlay-mode .site-footer,
+    body.lt-overlay-mode main > *:not(#overlay-stage-wrap) { display: none; }
+    body.lt-overlay-mode main { padding: 0; max-width: none; }
+    body.lt-overlay-mode .lt-stage { background: transparent; aspect-ratio: auto; height: 100vh; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Live Overlay</h1>
+    <p>
+      Type the two lower-third labels and hit <strong>Play</strong> to preview the
+      spring-rise animation exactly as it will appear as a live overlay (e.g. an OBS
+      Browser Source). The checkerboard behind the cards represents transparency —
+      the real background is fully transparent.
+    </p>
+
+    <div class="card-panel">
+      <div class="field-row">
+        <label for="icon1">Icon 1</label>
+        <input type="text" id="icon1" value="💼">
+        <label for="text1">Text 1</label>
+        <input type="text" id="text1" value="Real Jobs">
+        <label for="icon2">Icon 2</label>
+        <input type="text" id="icon2" value="👤">
+        <label for="text2">Text 2</label>
+        <input type="text" id="text2" value="Real People">
+      </div>
+      <button class="button" id="play-btn">▶ Play</button>
+    </div>
+
+    <div class="card-panel">
+      <div class="lt-stage lt-transparent" id="stage"></div>
+    </div>
+
+    <div class="card-panel" id="usage-panel">
+      <h2>Reusable as a browser-source URL</h2>
+      <p>
+        Skip the form entirely: pass the labels as query params and add
+        <code>&amp;autoplay=1</code>. The page strips its own chrome and plays
+        automatically on load — point OBS/vMix's Browser Source straight at the URL.
+      </p>
+      <pre id="url-example"></pre>
+      <h2>Reusable as a JS API</h2>
+      <p>Any page can drive the same engine directly:</p>
+      <pre>&lt;script src="assets/js/lower-thirds.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  LowerThirds.mount(document.getElementById("stage"), {
+    card1: { icon: "💼", text: "Real Jobs" },
+    card2: { icon: "👤", text: "Real People" },
+  });
+&lt;/script&gt;</pre>
+    </div>
+  </main>
+
+  <script src="assets/js/lower-thirds.js"></script>
+  <script>
+    (function () {
+      var stage = document.getElementById("stage");
+      var controller = null;
+
+      function currentConfig() {
+        return {
+          card1: {
+            icon: document.getElementById("icon1").value,
+            text: document.getElementById("text1").value,
+          },
+          card2: {
+            icon: document.getElementById("icon2").value,
+            text: document.getElementById("text2").value,
+          },
+        };
+      }
+
+      function play() {
+        controller = LowerThirds.mount(stage, currentConfig());
+      }
+
+      document.getElementById("play-btn").addEventListener("click", play);
+
+      var params = new URLSearchParams(window.location.search);
+      var exampleUrl = new URL(window.location.href);
+      exampleUrl.search = "";
+      exampleUrl.searchParams.set("icon1", "💼");
+      exampleUrl.searchParams.set("text1", "Real Jobs");
+      exampleUrl.searchParams.set("icon2", "👤");
+      exampleUrl.searchParams.set("text2", "Real People");
+      exampleUrl.searchParams.set("autoplay", "1");
+      document.getElementById("url-example").textContent = exampleUrl.toString();
+
+      if (params.get("autoplay") === "1") {
+        document.body.classList.add("lt-overlay-mode");
+        var overlayWrap = document.createElement("div");
+        overlayWrap.id = "overlay-stage-wrap";
+        overlayWrap.appendChild(stage);
+        document.querySelector("main").appendChild(overlayWrap);
+
+        if (params.has("icon1")) document.getElementById("icon1").value = params.get("icon1");
+        if (params.has("text1")) document.getElementById("text1").value = params.get("text1");
+        if (params.has("icon2")) document.getElementById("icon2").value = params.get("icon2");
+        if (params.has("text2")) document.getElementById("text2").value = params.get("text2");
+        stage.classList.remove("lt-transparent");
+        play();
+      }
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

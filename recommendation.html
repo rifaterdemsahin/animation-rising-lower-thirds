@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recommendations — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>Recommendations</h1>
+    <p>
+      Before building the video-production pieces of this project, I surveyed the
+      current landscape of Claude Code "video production" skills on GitHub
+      (<a href="https://github.com/ychoi-kr/claude-ffmpeg-skill">ychoi-kr/claude-ffmpeg-skill</a>,
+      <a href="https://github.com/digitalsamba/claude-code-video-toolkit">digitalsamba/claude-code-video-toolkit</a>,
+      <a href="https://github.com/wilwaldon/Claude-Code-Video-Toolkit">wilwaldon/Claude-Code-Video-Toolkit</a>).
+      Here's what's in the project now and what I'd do next.
+    </p>
+
+    <div class="card-panel">
+      <h2>What's already installed</h2>
+      <p>
+        <code>.claude/skills/ffmpeg-usage</code> — an MIT-licensed ffmpeg skill
+        (from ychoi-kr/claude-ffmpeg-skill) for format conversion, compression, GIF
+        creation, and platform-specific presets. This is the one piece that's
+        genuinely useful for this repo today: <code>video-recorded.html</code> exports
+        WebM via <code>MediaRecorder</code>, and any Claude Code session in this repo
+        can now call on that skill to convert/compress the output (e.g. to MP4 for an
+        editor, or a small GIF for a README).
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>What I deliberately didn't add</h2>
+      <p>
+        Toolkits like <strong>digitalsamba/claude-code-video-toolkit</strong> and
+        <strong>wilwaldon/Claude-Code-Video-Toolkit</strong> bundle Remotion/Manim
+        pipelines, screen-recording, and multi-stage render workflows. Those are built
+        for producing longer explainer/promo videos from a Node/React toolchain. This
+        repo is a static site deployed as-is via GitHub Pages
+        (<code>.github/workflows/static.yml</code>, no build step) — pulling in a
+        Node/Remotion dependency would change that deployment model for a feature we
+        don't need yet (we only need one two-card lower-third clip, not a multi-scene
+        video). If that changes, Remotion is the right upgrade path — see below.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>Recommended next steps</h2>
+      <ol>
+        <li>
+          <strong>Use the ffmpeg skill to normalize output.</strong>
+          Browser-recorded WebM varies by browser/codec support. Standardize on one
+          delivery format (e.g. H.264 MP4 at 1920×1080) via the skill's recipes rather
+          than shipping whatever the browser happened to record.
+        </li>
+        <li>
+          <strong>Move to Remotion only if requirements grow</strong> — e.g. you need
+          frame-exact reproducibility (MediaRecorder is real-time and can drop frames
+          under load), audio sync, or to batch-render many variants server-side/in CI.
+          Remotion's <code>spring()</code> helper can reproduce the same damped
+          harmonic motion already implemented in <code>assets/js/lower-thirds.js</code>,
+          so the math wouldn't need to change, only the renderer.
+        </li>
+        <li>
+          <strong>Sync timing against real footage.</strong> The 150ms stagger and
+          spring constants (ζ = 0.5, ωn = 11) in <code>problem.md</code> were tuned by
+          eye — validate them against actual voiceover/cut points once this is used in
+          a real edit, and adjust <code>STAGGER_MS</code> / <code>ZETA</code> / <code>WN</code>
+          in <code>lower-thirds.js</code> if the bounce reads too slow or too snappy.
+        </li>
+        <li>
+          <strong>Batch generation.</strong> If you end up needing many lower-thirds
+          in one project (multiple names/roles), drive <code>video-recorded.html</code>
+          from a small JSON/CSV list instead of typing each one by hand, then use the
+          ffmpeg skill to concatenate the individual clips.
+        </li>
+        <li>
+          <strong>Keep video-live.html as the source of truth for "does it look
+          right live"</strong> — it's the cheapest way to sanity-check timing/wording
+          against a real stream layout before committing to a recorded export.
+        </li>
+      </ol>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>
