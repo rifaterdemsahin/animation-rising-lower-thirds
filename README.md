@@ -5,6 +5,8 @@ Example of practical Animation Helper
 
 Goal : Create a structure where there is 3 coming up lower third concepts rising with timing. 
 
+Problem Defined : [[problem.md]]
+
 - Example : Real Jobs / Real People
 
 <img width="1728" height="940" alt="image" src="https://github.com/user-attachments/assets/0b98495e-be5e-4197-8776-7fbd0bb17615" />
