@@ -19,6 +19,13 @@
       Press Play to run it.
     </p>
 
+    <h2 class="section-heading">🎬 Example</h2>
+    <p>
+      The reference animation itself — always the engine's normal centered
+      layout, per <code>problem.md</code>'s spec. If you want to explore a
+      custom placement instead, that's what the Builder below is for.
+    </p>
+
     <div class="card-panel">
       <div class="lt-stage lt-explainer-bg" id="stage">
         <div class="lt-bg-layer" id="bg-layer"></div>
@@ -54,6 +61,12 @@
         </li>
       </ol>
     </div>
+
+    <h2 class="section-heading">🏗️ Builder</h2>
+    <p>
+      Configure the scene, see exactly where each label lands, and get the
+      parameters, a shareable URL, or an AI-agent prompt to reproduce it.
+    </p>
 
     <div class="card-panel">
       <h2>🖼️ Background image credit</h2>
@@ -114,9 +127,10 @@ Save to: assets/k8s-explainer-background.png</pre>
         entrance delay, and its <strong>x/y position on the 1920×1080 background
         image</strong> — useful if you're rebuilding this composition in another
         tool (Canva, Figma, a video editor) and need to know exactly where to place
-        each label over the background PNG. Positions are computed live from the
-        fields below, at the background image's native resolution (not the
-        viewport's), so they stay correct regardless of screen size.
+        each label over the background PNG. X/Y start at the auto-computed rest
+        position and update live as you edit the fields or drag the sliders below,
+        all at the background image's native resolution (not the viewport's), so
+        they stay correct regardless of screen size.
       </p>
       <div style="overflow-x: auto;">
         <table id="params-table">
@@ -138,15 +152,62 @@ Save to: assets/k8s-explainer-background.png</pre>
         <label for="emoji1">Emoji 1</label>
         <input type="text" id="emoji1">
         <label for="text1">Text 1</label>
-        <input type="text" id="text1">
+        <textarea id="text1" rows="2"></textarea>
         <label for="emoji2">Emoji 2</label>
         <input type="text" id="emoji2">
         <label for="text2">Text 2</label>
-        <input type="text" id="text2">
+        <textarea id="text2" rows="2"></textarea>
         <label for="emoji3">Emoji 3</label>
         <input type="text" id="emoji3">
         <label for="text3">Text 3</label>
-        <input type="text" id="text3">
+        <textarea id="text3" rows="2"></textarea>
+      </div>
+
+      <h3>📍 Position — drag to place each label on the 1920×1080 image</h3>
+      <p>
+        Starts at the auto-computed rest position (matching the Example above);
+        drag to explore a custom layout. Only affects the preview below and the
+        parameters table — the animated Example always keeps its normal centered
+        layout, per <code>problem.md</code>'s spec.
+      </p>
+
+      <div class="lt-slider-row">
+        <div>
+          <label for="x1">Stage 1 — X <output id="x1-out"></output>px</label>
+          <input type="range" id="x1" min="0" max="1920" step="1">
+        </div>
+        <div>
+          <label for="y1">Stage 1 — Y <output id="y1-out"></output>px</label>
+          <input type="range" id="y1" min="0" max="1080" step="1">
+        </div>
+      </div>
+      <div class="lt-slider-row">
+        <div>
+          <label for="x2">Stage 2 — X <output id="x2-out"></output>px</label>
+          <input type="range" id="x2" min="0" max="1920" step="1">
+        </div>
+        <div>
+          <label for="y2">Stage 2 — Y <output id="y2-out"></output>px</label>
+          <input type="range" id="y2" min="0" max="1080" step="1">
+        </div>
+      </div>
+      <div class="lt-slider-row">
+        <div>
+          <label for="x3">Stage 3 — X <output id="x3-out"></output>px</label>
+          <input type="range" id="x3" min="0" max="1920" step="1">
+        </div>
+        <div>
+          <label for="y3">Stage 3 — Y <output id="y3-out"></output>px</label>
+          <input type="range" id="y3" min="0" max="1080" step="1">
+        </div>
+      </div>
+
+      <div class="lt-builder-preview-outer" id="builder-preview-outer">
+        <div class="lt-builder-preview" id="builder-preview">
+          <div class="lt-card lt-builder-pill" id="builder-pill-1"><span class="lt-icon"></span><span class="lt-text"></span></div>
+          <div class="lt-card lt-builder-pill" id="builder-pill-2"><span class="lt-icon"></span><span class="lt-text"></span></div>
+          <div class="lt-card lt-builder-pill" id="builder-pill-3"><span class="lt-icon"></span><span class="lt-text"></span></div>
+        </div>
       </div>
     </div>
 
@@ -199,6 +260,26 @@ Save to: assets/k8s-explainer-background.png</pre>
         acc["text" + n] = document.getElementById("text" + n);
         return acc;
       }, {});
+
+      // Position sliders (task: "let me change location of x and y with
+      // sliders") — deliberately independent of the real animated Example,
+      // which always uses the engine's normal centered layout. Dragging a
+      // slider only moves the Builder preview pill + updates the parameters
+      // table; positionState[i].x/y hold whichever is current (auto-measured
+      // or manually dragged), .w/.h always come from the last measurement.
+      var sliderFields = [1, 2, 3].reduce(function (acc, n) {
+        acc["x" + n] = document.getElementById("x" + n);
+        acc["y" + n] = document.getElementById("y" + n);
+        return acc;
+      }, {});
+      var builderPills = [1, 2, 3].map(function (n) {
+        return document.getElementById("builder-pill-" + n);
+      });
+      var positionState = [
+        { x: 0, y: 0, w: 0, h: 0 },
+        { x: 0, y: 0, w: 0, h: 0 },
+        { x: 0, y: 0, w: 0, h: 0 },
+      ];
 
       // Seed the input fields from URL params (if given) or the Kubernetes
       // preset, so the form always reflects what's about to play.
@@ -278,12 +359,57 @@ Save to: assets/k8s-explainer-background.png</pre>
         return positions;
       }
 
-      function renderParamsTable(config) {
+      // Re-measures the natural (auto-centered) rest position for the given
+      // config and stores it as the current positionState — called when the
+      // emoji/text fields change, so a new stage's sliders start from a
+      // sensible default rather than wherever the last stage's text left them.
+      function remeasurePositions(config) {
         var positions = measureCardPositions(config);
+        positions.forEach(function (pos, i) {
+          positionState[i] = pos;
+        });
+        syncSlidersFromPositionState();
+      }
+
+      function syncSlidersFromPositionState() {
+        positionState.forEach(function (pos, i) {
+          var n = i + 1;
+          sliderFields["x" + n].value = pos.x;
+          sliderFields["y" + n].value = pos.y;
+          document.getElementById("x" + n + "-out").textContent = pos.x;
+          document.getElementById("y" + n + "-out").textContent = pos.y;
+        });
+      }
+
+      var builderPreviewOuter = document.getElementById("builder-preview-outer");
+      var builderPreview = document.getElementById("builder-preview");
+
+      function updateBuilderPreview(config) {
+        // .lt-builder-preview is rendered at native 1920x1080 and scaled down
+        // as a whole to fit its responsive container — see the CSS comment on
+        // .lt-builder-preview-outer for why (percentage positioning alone
+        // isn't enough, since pill width comes from a fixed-px font).
+        var scale = builderPreviewOuter.getBoundingClientRect().width / IMAGE_W;
+        builderPreview.style.transform = "scale(" + scale + ")";
+
+        positionState.forEach(function (pos, i) {
+          var pill = builderPills[i];
+          pill.style.left = pos.x + "px";
+          pill.style.top = pos.y + "px";
+          pill.querySelector(".lt-icon").textContent = config.cards[i].icon;
+          pill.querySelector(".lt-text").textContent = config.cards[i].text;
+        });
+      }
+
+      window.addEventListener("resize", function () {
+        updateBuilderPreview(currentConfig());
+      });
+
+      function renderParamsTable(config) {
         var body = document.getElementById("params-table-body");
         body.innerHTML = "";
         config.cards.forEach(function (card, i) {
-          var pos = positions[i] || { x: 0, y: 0, w: 0, h: 0 };
+          var pos = positionState[i];
           var tr = document.createElement("tr");
           tr.innerHTML =
             "<td>" + (i + 1) + "</td>" +
@@ -334,14 +460,38 @@ Save to: assets/k8s-explainer-background.png</pre>
       function refresh() {
         var config = currentConfig();
         updateCaptions(config);
+        remeasurePositions(config);
         renderParamsTable(config);
         updateGeneratedUrl(config);
         updateGeneratedPrompt(config);
+        updateBuilderPreview(config);
       }
 
       [1, 2, 3].forEach(function (n) {
         fields["emoji" + n].addEventListener("input", refresh);
         fields["text" + n].addEventListener("input", refresh);
+      });
+
+      // Slider drags reposition the Builder preview/table only — they don't
+      // re-measure (that would just snap back to the auto-centered position,
+      // undoing the drag) and never touch the animated Example.
+      function onSliderInput() {
+        var config = currentConfig();
+        [1, 2, 3].forEach(function (n) {
+          var x = parseInt(sliderFields["x" + n].value, 10);
+          var y = parseInt(sliderFields["y" + n].value, 10);
+          positionState[n - 1].x = x;
+          positionState[n - 1].y = y;
+          document.getElementById("x" + n + "-out").textContent = x;
+          document.getElementById("y" + n + "-out").textContent = y;
+        });
+        renderParamsTable(config);
+        updateBuilderPreview(config);
+      }
+
+      [1, 2, 3].forEach(function (n) {
+        sliderFields["x" + n].addEventListener("input", onSliderInput);
+        sliderFields["y" + n].addEventListener("input", onSliderInput);
       });
 
       if (params.has("bgprompt")) {

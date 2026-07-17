@@ -1,15 +1,17 @@
 # Master Spec: Kubernetes Flow Explainer (3rd output + engine generalization)
 
-Status: **implemented** (2026-07-17), **extended four times** (2026-07-18, see
-§8-12). Scope decided via clarifying questions on 2026-07-17: new standalone
+Status: **implemented** (2026-07-17), **extended five times** (2026-07-18, see
+§8-13). Scope decided via clarifying questions on 2026-07-17: new standalone
 page, background image pre-generated as a static asset, sequential staged
 reveal (Cluster → Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes
 example became the shared default content across all three outputs (§8), a
 full project reference was added (§9), the background was replaced with a
 content-matched version plus standing rules (§10), a live-API 404 bug at the
-bare root URL was fixed with a regression test added (§11), and
-`explainer.html` gained a live parameters table (with x/y image positions)
-plus a URL/agent-prompt generator (§12).
+bare root URL was fixed with a regression test added (§11), `explainer.html`
+gained a live parameters table (with x/y image positions) plus a URL/agent-
+prompt generator (§12), and word wrap, X/Y position sliders (driving a
+separate Builder preview, not the real animation), and an Example/Builder
+section split were added (§13).
 
 This spec sits alongside `problem.md` (which remains the unmodified motion/visual
 contract for the base 2-card "Elastic Rise" spring) and extends the toolbox described
@@ -419,3 +421,38 @@ caught by CI going forward instead of only by a user noticing.
 This turns the page into a small standalone tool: type any three labels, see
 exactly where they'll land on the background image, get a shareable URL or
 agent-prompt for the result, and preview it — all without leaving the page.
+
+---
+
+## 13. Addendum (2026-07-18, final): word wrap, X/Y sliders, Example/Builder split
+
+Three related changes to `explainer.html`:
+
+- **Word wrap.** `text1`/`text2`/`text3` changed from single-line `<input>` to
+  wrapping `<textarea rows="2">` — long labels are now fully visible while
+  typing instead of scrolling horizontally in a single-line box. Emoji fields
+  stay plain `<input>` (short content, no need to wrap).
+- **X/Y position sliders.** Six new range inputs (`x1`/`y1`/`x2`/`y2`/`x3`/`y3`,
+  0–1920 / 0–1080) let you drag each stage's label to a custom position. This
+  is deliberately **not** wired into the real animated Example — that always
+  keeps the engine's normal centered flex layout, per `problem.md`'s spec.
+  Instead, the sliders drive a new **Builder preview**: a static, non-animated
+  mockup rendered at the background image's true native size (1920×1080) and
+  scaled down as a whole via CSS `transform: scale()` to fit its responsive
+  container — a deliberate choice over percentage-based positioning, which
+  would have kept left/top proportionally correct but not pill *width* (fixed
+  by the 26px label font, not responsive), causing visible overlap at smaller
+  screen sizes. This was caught and fixed during testing: an earlier
+  percentage-based version showed the three pills overlapping in the browser
+  despite computing numerically correct non-overlapping x values.
+  `positionState[i]` holds each pill's current x/y (auto-measured on text/emoji
+  change, or manually dragged) and w/h (always from the last measurement);
+  dragging a slider updates the Builder preview and the parameters table only,
+  never re-measures (which would just snap the drag back to the auto position).
+- **Example / Builder split.** The page now reads top-to-bottom as two labeled
+  sections: **🎬 Example** (the animated stage + Play — the fixed, canonical,
+  spec-compliant demo) and **🏗️ Builder** (background credit, parameters
+  table, customize fields + position sliders + preview, URL/prompt generator —
+  everything for designing and exporting your own variant). `.section-heading`
+  in `style.css` is the shared divider style for this kind of top-level
+  grouping, reusable by future pages.

@@ -125,3 +125,45 @@
   color: #f2f7f7;
   line-height: 1.5;
 }
+
+/* Builder preview (explainer.html) — a static, non-animated mockup for
+   exploring custom label placement via the X/Y sliders. Deliberately
+   separate from .lt-stage/.lt-card's real spring-rise rendering: the
+   animated Example always keeps its normal engine-centered layout per
+   problem.md's spec, regardless of what's dragged here.
+
+   .lt-builder-preview is rendered at the background image's true native
+   size (1920x1080, matching the coordinate space the parameters table and
+   sliders use) and then uniformly scaled down via CSS transform to fit
+   .lt-builder-preview-outer's responsive width — like a viewport zoom, not
+   a percentage-based reflow. This keeps pill *position and size* both
+   proportionally correct at any screen size: percentage-positioning alone
+   would keep left/top correct but not the pills' width (fixed by their
+   26px font, per problem.md's spec, not responsive), causing them to
+   visually overlap at container widths smaller than 1920px. */
+.lt-builder-preview-outer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.lt-builder-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  background-image: linear-gradient(180deg, rgba(6, 16, 15, 0.35) 0%, rgba(6, 16, 15, 0.92) 78%), url("../k8s-explainer-background.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.lt-card.lt-builder-pill {
+  position: absolute;
+  transform: none;
+  opacity: 1;
+}

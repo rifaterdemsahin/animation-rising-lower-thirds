@@ -183,7 +183,8 @@ label {
   margin-bottom: 4px;
 }
 
-input[type="text"] {
+input[type="text"],
+textarea {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -194,10 +195,47 @@ input[type="text"] {
   margin-bottom: 14px;
 }
 
+textarea {
+  font-family: inherit;
+  line-height: 1.4;
+  resize: vertical;
+  overflow-wrap: break-word;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 90px 1fr;
   gap: 12px;
+  align-items: start;
+}
+
+/* explainer.html's builder — X/Y sliders for exploring custom label placement */
+.lt-slider-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.lt-slider-row output {
+  color: var(--accent);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* Section-level dividers (explainer.html: "Example" / "Builder") */
+.section-heading {
+  margin: 40px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.section-heading:first-of-type {
+  margin-top: 0;
 }
 
 /* Shared top navigation, injected by assets/js/nav.js */

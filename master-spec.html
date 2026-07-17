@@ -23,8 +23,8 @@
     </p>
 
     <div class="card-panel">
-      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended four
-      times (2026-07-18, see §8–12 below). Scope decided via clarifying
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended five
+      times (2026-07-18, see §8–13 below). Scope decided via clarifying
       questions on 2026-07-17: new standalone page, background image
       pre-generated as a static asset, sequential staged reveal (Cluster →
       Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes example
@@ -32,8 +32,11 @@
       (§8), a full project reference was added (§9), the background was
       replaced with a content-matched version plus standing rules (§10), a
       live-API 404 bug at the bare root URL was fixed with a regression test
-      added (§11), and <code>explainer.html</code> gained a live parameters
-      table (with x/y image positions) plus a URL/agent-prompt generator (§12).</p>
+      added (§11), <code>explainer.html</code> gained a live parameters
+      table (with x/y image positions) plus a URL/agent-prompt generator
+      (§12), and word wrap, X/Y position sliders (driving a separate Builder
+      preview, not the real animation), and an Example/Builder section split
+      were added (§13).</p>
     </div>
 
     <div class="card-panel">
@@ -422,6 +425,51 @@
         shareable URL or agent-prompt for the result, and preview it — all
         without leaving the page.
       </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🎚️ 13. Addendum (2026-07-18, final): word wrap, X/Y sliders, Example/Builder split</h2>
+      <p>Three related changes to <code>explainer.html</code>:</p>
+      <ul>
+        <li>
+          <strong>Word wrap.</strong> <code>text1</code>/<code>text2</code>/<code>text3</code>
+          changed from single-line <code>&lt;input&gt;</code> to wrapping
+          <code>&lt;textarea rows="2"&gt;</code> — long labels are now fully
+          visible while typing instead of scrolling horizontally in a
+          single-line box. Emoji fields stay plain <code>&lt;input&gt;</code>
+          (short content, no need to wrap).
+        </li>
+        <li>
+          <strong>X/Y position sliders.</strong> Six new range inputs
+          (<code>x1</code>/<code>y1</code>/<code>x2</code>/<code>y2</code>/<code>x3</code>/<code>y3</code>,
+          0–1920 / 0–1080) let you drag each stage's label to a custom
+          position. Deliberately <strong>not</strong> wired into the real
+          animated Example — that always keeps the engine's normal centered
+          flex layout, per <code>problem.md</code>'s spec. Instead, the
+          sliders drive a new <strong>Builder preview</strong>: a static,
+          non-animated mockup rendered at the background image's true native
+          size (1920×1080) and scaled down as a whole via CSS
+          <code>transform: scale()</code> to fit its responsive container —
+          chosen over percentage-based positioning, which would have kept
+          left/top proportionally correct but not pill <em>width</em> (fixed
+          by the 26px label font, not responsive), causing visible overlap at
+          smaller screen sizes. This was caught and fixed during testing: an
+          earlier percentage-based version showed the three pills visibly
+          overlapping despite computing numerically correct, non-overlapping
+          x values.
+        </li>
+        <li>
+          <strong>Example / Builder split.</strong> The page now reads
+          top-to-bottom as two labeled sections: <strong>🎬 Example</strong>
+          (the animated stage + Play — fixed, canonical, spec-compliant) and
+          <strong>🏗️ Builder</strong> (background credit, parameters table,
+          customize fields + position sliders + preview, URL/prompt generator
+          — everything for designing and exporting your own variant).
+          <code>.section-heading</code> in <code>style.css</code> is the
+          shared divider style for this kind of top-level grouping, reusable
+          by future pages.
+        </li>
+      </ul>
     </div>
   </main>
 
