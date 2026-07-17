@@ -2,6 +2,7 @@
 Example of practical Animation Helper
 
 > Live site: https://rifaterdemsahin.github.io/animation-rising-lower-thirds/
+> With Backend: https://lower-thirds-api.fly.dev/
 
 > https://youtu.be/jcrLdUPHQZQ?t=61
 
