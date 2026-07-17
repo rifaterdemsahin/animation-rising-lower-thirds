@@ -5,7 +5,7 @@ Example of practical Animation Helper
 
 Goal : Create a structure where there is 3 coming up lower third concepts rising with timing. 
 
-Problem Defined : [[problem.md]]
+Problem Defined : https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md
 
 - Example : Real Jobs / Real People
 
