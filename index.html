@@ -12,14 +12,16 @@
   <main>
     <h1>🎬 Rising Lower Thirds</h1>
     <p>
-      A practical animation helper for the twin <strong>"Real Jobs / Real People"</strong>
-      lower-third cards: two rounded cards that spring up from off-screen, bounce, and
-      settle into place, with the second card staggered <code>150ms</code> behind the first.
-      The full motion spec lives in
-      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>.
-      This particular rising-card animation style is demonstrated in
-      <a href="https://youtu.be/jcrLdUPHQZQ?t=60" target="_blank" rel="noopener">this video</a> —
-      that's the reference for the look and timing this toolbox reproduces.
+      A practical animation helper for lower-third cards that spring up from
+      off-screen, bounce, and settle into place, each one staggered behind the
+      last. The formal motion spec was designed against the twin
+      <strong>"Real Jobs / Real People"</strong> example (two cards, <code>150ms</code>
+      stagger) — the full math lives in
+      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>,
+      and this particular rising-card animation style is demonstrated in
+      <a href="https://youtu.be/jcrLdUPHQZQ?t=60" target="_blank" rel="noopener">this video</a>.
+      The interactive tools below default to a different worked example — a
+      three-stage Kubernetes request flow — built on that same spec.
     </p>
 
     <div class="card-panel">
@@ -67,14 +69,17 @@
           100% by frame 8, card 2 staggered +150ms behind card 1.
         </li>
         <li>
-          <strong>Two output modes</strong> from one shared animation engine: an actual
-          downloadable video file (for editing), and a transparent live overlay (for
-          OBS/vMix streaming).
+          <strong>Three output modes</strong> from one shared animation engine: an actual
+          downloadable video file with a background (for editing), a transparent live
+          overlay with no background (for OBS/vMix streaming), and an interactive HTML
+          teaching page with a background — all defaulting to the same Kubernetes
+          example content.
         </li>
         <li>
-          <strong>Usable two ways</strong> — click through the UI, or drive it headlessly via
-          a URL query-param API or a plain JS API (see
-          <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>).
+          <strong>Usable three ways</strong> — click through the UI, drive it headlessly via
+          a URL query-param API or a plain JS API, or call the hosted Go/Fly.io API (see
+          <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>
+          / <a href="mcp-guide.html">mcp-guide.html</a>).
         </li>
         <li><strong>No build step</strong> — plain static HTML/CSS/JS, deployable as-is to GitHub Pages.</li>
       </ul>
@@ -86,25 +91,28 @@
         Instead of hand-keyframing this animation in a video editor every time the copy
         changes, you <strong>type the text you want for each lower third</strong> and the
         same animation engine (<code>assets/js/lower-thirds.js</code>) renders it for you.
-        One engine, two outputs:
+        One engine, one shared example (<code>LowerThirds.PRESETS.kubernetes</code>:
+        Cluster → Ingress Gateway → Pod), three outputs:
       </p>
       <ul>
         <li>
           <strong><a href="video-recorded.html">video-recorded.html</a></strong> —
-          type your text, render it to a canvas, and export an actual downloadable
+          type your text, render it to a canvas <strong>with the Kubernetes background
+          painted behind the cards</strong>, and export an actual downloadable
           video file (WebM/MP4) you can drop into an edit timeline.
         </li>
         <li>
           <strong><a href="video-live.html">video-live.html</a></strong> —
-          the same animation as a lightweight, transparent-background overlay you can
-          point OBS/vMix at for a live stream, driven by URL query params or the JS API
-          directly.
+          the same animation as a lightweight, <strong>transparent</strong>-background
+          overlay you can point OBS/vMix at for a live stream, driven by URL query
+          params or the JS API directly — no background image here, since a live
+          overlay has to stay transparent to composite over your stream.
         </li>
         <li>
           <strong><a href="explainer.html">explainer.html</a></strong> —
-          a worked example using the same engine as a teaching tool: three staged
-          cards (Kubernetes Test Cluster → Ingress Gateway → Pod) with a generated
-          background, flow arrows, and a Play button that explains the concept.
+          the same three cards, staged one at a time instead of together, with the
+          Kubernetes background, flow arrows, and a Play button that explains the
+          concept. Has a "Download standalone HTML" button too.
         </li>
       </ul>
       <p>
@@ -117,9 +125,11 @@
       </p>
       <p>
         See <a href="recommendation.html">recommendation.html</a> for suggested next
-        steps, informed by the video-production tooling evaluated for this project, and
+        steps, informed by the video-production tooling evaluated for this project,
         <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>
-        for driving this toolbox from an MCP client/agent instead of the UI.
+        for driving this toolbox from an MCP client/agent instead of the UI, and
+        <a href="master-spec.html">master-spec.html</a> for the full design/implementation
+        spec behind the Kubernetes example and the shared-background/preset work.
       </p>
     </div>
 
@@ -136,16 +146,15 @@
         <li>📡 Use it in a live session — <a href="video-live.html">video-live.html</a></li>
         <li>🧭 Use it to teach a concept — <a href="explainer.html">explainer.html</a></li>
         <li>📖 Use it over an API — <a href="mcp-guide.html">mcp-guide.html</a></li>
+        <li>🚀 Call the hosted API directly — <a href="https://lower-thirds-api.fly.dev" target="_blank" rel="noopener">lower-thirds-api.fly.dev</a></li>
+        <li>🗂️ Read the full spec — <a href="master-spec.html">master-spec.html</a></li>
       </ul>
     </div>
   </main>
 
   <script src="assets/js/lower-thirds.js"></script>
   <script>
-    LowerThirds.mount(document.getElementById("preview-stage"), {
-      card1: { icon: "💼", text: "Real Jobs" },
-      card2: { icon: "👤", text: "Real People" },
-    });
+    LowerThirds.mount(document.getElementById("preview-stage"), LowerThirds.PRESETS.kubernetes);
   </script>
   <script src="assets/js/nav.js"></script>
 </body>

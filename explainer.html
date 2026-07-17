@@ -85,11 +85,11 @@ Save to: assets/k8s-explainer-background.png</pre>
   <script src="assets/js/lower-thirds.js"></script>
   <script>
     (function () {
-      var DEFAULT_CARDS = [
-        { icon: "🖥️", text: "Kubernetes Test Cluster", delayMs: 0 },
-        { icon: "🚪", text: "Ingress Gateway", delayMs: 3200 },
-        { icon: "📦", text: "Pod", delayMs: 6400 },
-      ];
+      // Shared with video-recorded.html/video-live.html via LowerThirds.PRESETS —
+      // cloned per-card so URL-param overrides below don't mutate the shared preset.
+      var DEFAULT_CARDS = LowerThirds.PRESETS.kubernetes.cards.map(function (card) {
+        return { icon: card.icon, text: card.text, delayMs: card.delayMs };
+      });
       var DEFAULT_CAPTIONS = [
         "Everything below lives inside one test cluster — the boundary for all the resources in this demo.",
         "External traffic enters through the Ingress Gateway, which matches incoming requests against routing rules.",

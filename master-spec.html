@@ -12,17 +12,24 @@
     <h1>🗂️ Master Spec: Kubernetes Flow Explainer</h1>
     <p>
       The design/implementation spec for <a href="explainer.html">explainer.html</a>
-      and the engine generalization that made it possible. This page mirrors
+      and the engine generalization that made it possible — plus (§8) how that
+      Kubernetes example became the shared default across all three outputs, and
+      (§9) a full audit-style reference to every other doc in this repo. This page
+      mirrors
       <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a>
       on-site. It sits alongside <code>problem.md</code> (the unmodified motion/visual
       contract for the base 2-card spring) and does not change it.
     </p>
 
     <div class="card-panel">
-      <p><strong>Status:</strong> ✅ implemented (2026-07-17). Scope decided via
-      clarifying questions on 2026-07-17: new standalone page, background image
-      pre-generated as a static asset, sequential staged reveal (Cluster → Ingress
-      Gateway → Pod).</p>
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended
+      (2026-07-18, see §8–9 below). Scope decided via clarifying questions on
+      2026-07-17: new standalone page, background image pre-generated as a
+      static asset, sequential staged reveal (Cluster → Ingress Gateway → Pod).
+      Extended 2026-07-18: the Kubernetes example became the shared default
+      content across <strong>all three outputs</strong>, not just
+      <code>explainer.html</code> — §8 covers what changed and why, §9 is a
+      full project reference.</p>
     </div>
 
     <div class="card-panel">
@@ -170,10 +177,14 @@
 
     <div class="card-panel">
       <h2>🚫 5. Explicitly out of scope for this pass</h2>
+      <p>
+        <strong>⚠️ The first bullet below was reversed on 2026-07-18 — see §8.</strong>
+        Left here for the historical record rather than silently rewritten.
+      </p>
       <ul>
-        <li><strong>MP4/live-overlay K8s variants</strong> — only <code>explainer.html</code> gets the K8s example, background, captions, and arrows.</li>
-        <li><strong>Live/client-side Gemini image generation</strong> — no API key input, no runtime fetch from the page.</li>
-        <li><strong>Editable/typed K8s text</strong> by default — content is fixed for the worked example (URL-param overrides added later, see <a href="explainer.html">explainer.html</a>).</li>
+        <li><s><strong>MP4/live-overlay K8s variants</strong> — only <code>explainer.html</code> gets the K8s example, background, captions, and arrows.</s> Reversed in §8: <code>video-recorded.html</code> now also gets the K8s example + background; <code>video-live.html</code> gets the K8s example content (no background, by design).</li>
+        <li><strong>Live/client-side Gemini image generation</strong> — no API key input, no runtime fetch from the page. (Still true.)</li>
+        <li><strong>Editable/typed K8s text</strong> by default — content is fixed for the worked example (URL-param overrides added later, see <a href="explainer.html">explainer.html</a>). (Still true — all three outputs default to K8s but remain fully typeable.)</li>
       </ul>
     </div>
 
@@ -191,6 +202,108 @@
           <code>requestAnimationFrame</code> there (confirmed on the pre-existing,
           unmodified <code>video-live.html</code> too — not a regression).
         </li>
+      </ul>
+    </div>
+
+    <div class="card-panel">
+      <h2>🔄 8. Addendum (2026-07-18): unified Kubernetes example across all three outputs</h2>
+      <p>
+        <strong>This reverses §5's original "MP4/live-overlay K8s variants: out of
+        scope" call.</strong> Decided via clarifying question that day:
+        <code>video-recorded.html</code> and <code>explainer.html</code> both get
+        the Kubernetes background + content; <code>video-live.html</code> switches
+        its default <em>content</em> to the same Kubernetes example but stays
+        <strong>transparent</strong> (no background image) — a live-compositing
+        OBS/vMix overlay can't carry a baked-in background without losing the
+        ability to composite over the stream underneath it, so that page is
+        deliberately excluded from "all outputs get a background."
+      </p>
+
+      <h3>8.1 Engine changes</h3>
+      <ul>
+        <li>
+          <strong><code>LowerThirds.PRESETS.kubernetes</code></strong> — the shared
+          example content (<code>cards</code>, same three entries/delays as §3.1)
+          plus <code>background</code> (the image path), added to
+          <code>lower-thirds.js</code> as the single source of truth. All three
+          output pages read from this preset for their defaults instead of each
+          hardcoding their own copy — avoids the "Real Jobs / Real People"
+          hardcoded-in-three-places drift this same repo had before this addendum.
+        </li>
+        <li>
+          <strong><code>drawCanvasFrame(ctx, w, h, t, config, restY, onBackground)</code></strong>
+          — new optional 6th parameter. Runs right after the per-frame
+          <code>clearRect</code> and before any card is drawn, so a caller can
+          paint a background image without the engine needing to know anything
+          about image loading/decoding. Purely additive.
+        </li>
+      </ul>
+
+      <h3>8.2 <code>video-recorded.html</code></h3>
+      <ul>
+        <li>Form grew a third icon/text pair; all three default to the Kubernetes preset's values (typing over them still works exactly as before).</li>
+        <li>A preloaded background image is drawn full-canvas, then the same dark gradient <code>explainer.html</code> uses, via the new <code>onBackground</code> callback.</li>
+        <li>
+          <strong>Bug fixed in passing:</strong> the recorder's animation loop
+          previously compared elapsed time against the fixed
+          <code>LowerThirds.DURATION_MS</code> (sized for the legacy 2-card case,
+          ~1350ms) regardless of the actual config — would have silently cut a
+          3-stage Kubernetes recording off after ~1.3s instead of the ~7.6s it
+          needs. Now computes <code>LowerThirds.computeDuration(...)</code> per run.
+        </li>
+      </ul>
+
+      <h3>8.3 <code>video-live.html</code></h3>
+      <ul>
+        <li>Same third field added; defaults to the Kubernetes preset's cards; URL API gained <code>icon3</code>/<code>text3</code>.</li>
+        <li><strong>No background image</strong> — the one output that intentionally does not follow "all outputs get a background."</li>
+      </ul>
+
+      <h3>8.4 Known gap</h3>
+      <p>
+        The hosted API (<code>server/main.go</code>) still only accepts
+        <code>{icon1, text1, icon2, text2}</code> — not extended to 3 cards or a
+        background as part of this addendum. Calling it still produces a 2-card,
+        background-free video even though the page it drives now defaults to 3
+        cards with a background when used directly. Documented as a known
+        limitation in <a href="mcp-guide.html">mcp-guide.html</a>'s Option 3 rather
+        than silently mismatched.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>📚 9. Project reference (audit — 2026-07-18)</h2>
+      <p>
+        A from-scratch pass over every doc in the repo, to keep this page a
+        genuine "catch me up on everything" reference rather than just the
+        original explainer spec. Each area's authoritative source stays where it
+        was — this section points at it rather than duplicating it, so it can't
+        silently drift out of sync.
+      </p>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead><tr><th>Area</th><th>Authoritative source</th></tr></thead>
+          <tbody>
+            <tr><td>Motion/visual spec (the math, colors, dimensions)</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a> — unmodified since day one, deliberately.</td></tr>
+            <tr><td>Architecture, conventions, file-by-file breakdown</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/CLAUDE.md">CLAUDE.md</a></td></tr>
+            <tr><td>Project pitch, domain, requirements, environment links</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/README.md">README.md</a> / <a href="index.html">index.html</a></td></tr>
+            <tr><td>Programmatic consumption + copy-pasteable agent prompts</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a> / <a href="mcp-guide.html">mcp-guide.html</a></td></tr>
+            <tr><td>Hosted Go/Fly.io API — endpoints, auth, deploy/operate</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/server/README.md">server/README.md</a></td></tr>
+            <tr><td>Video-production tooling decisions</td><td><a href="recommendation.html">recommendation.html</a></td></tr>
+            <tr><td>This feature's design/implementation record</td><td>this page / <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a></td></tr>
+            <tr><td>Original Canva reference presentation</td><td><a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/canva.md">canva.md</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Site-wide features added incrementally across sessions, easy to lose track of</strong> (all implemented, all live):</p>
+      <ul>
+        <li><strong>Light/dark theme toggle</strong> — footer button, persisted, site-chrome-only (card visuals never themed).</li>
+        <li><strong><code>overflow-wrap: break-word</code></strong> on <code>body</code>, inherited site-wide; <code>&lt;pre&gt;</code> blocks keep their horizontal scroll by design.</li>
+        <li><strong>Floating note-taker</strong> (right here on this page) — fixed position, per-page <code>localStorage</code>, copy-to-clipboard.</li>
+        <li><strong>"Download standalone HTML"</strong> on <code>explainer.html</code> — client-side bundling into one dependency-free file, verified via a real <code>DOMParser</code> pass.</li>
+        <li><strong><code>tests/test_pages.py</code></strong> + CI workflow — stdlib-only smoke test, every page + every local asset, runs on every push/PR.</li>
+        <li><strong>Footer</strong> — links to this spec, the hosted API, GitHub, Actions, plus the theme toggle — one shared component, not duplicated per page.</li>
       </ul>
     </div>
   </main>

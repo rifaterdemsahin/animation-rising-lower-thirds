@@ -3,14 +3,19 @@
  *
  * Implements the "Elastic Rise" motion spec from problem.md:
  * a damped harmonic oscillation y(t) = A * e^(-zeta*wn*t) * cos(wd*t),
- * with card 2 staggered +150ms behind card 1.
+ * with card 2 staggered +150ms behind card 1 (legacy 2-card shape), or
+ * arbitrary caller-supplied delays for N cards (see PRESETS.kubernetes).
  *
  * Exposes:
  *  - LowerThirds.STYLE            visual spec constants
+ *  - LowerThirds.PRESETS          shared example content (e.g. .kubernetes)
  *  - LowerThirds.springState(t, delayMs)   -> {y, opacity} at time t (ms)
- *  - LowerThirds.DURATION_MS       time until the motion has fully settled
- *  - LowerThirds.mount(container, config)  DOM/CSS renderer (video-live.html)
- *  - LowerThirds.drawCanvasFrame(ctx, w, h, t, config)  canvas renderer (video-recorded.html)
+ *  - LowerThirds.DURATION_MS       legacy fixed 2-card settle time
+ *  - LowerThirds.computeDuration(cards)    settle time for an arbitrary card set
+ *  - LowerThirds.mount(container, config)  DOM/CSS renderer (video-live.html, explainer.html)
+ *  - LowerThirds.drawCanvasFrame(ctx, w, h, t, config, restY, onBackground)
+ *    canvas renderer (video-recorded.html); onBackground(ctx) runs after the
+ *    clear and before cards are drawn, for painting a background image.
  */
 (function (global) {
   "use strict";
@@ -38,6 +43,23 @@
   const ZETA = 0.5; // damping ratio
   const WN = 11; // natural frequency (rad/s, tuned for ~1s settle)
   const WD = WN * Math.sqrt(1 - ZETA * ZETA);
+
+  // Shared example content — single source of truth so video-recorded.html,
+  // video-live.html, and explainer.html all demo the same Kubernetes flow
+  // (cluster -> ingress gateway -> pod) instead of three separate copies of
+  // the same array literal drifting apart. Callers should clone entries
+  // before mutating (e.g. explainer.html's URL-param overrides) rather than
+  // editing this array in place.
+  const PRESETS = {
+    kubernetes: {
+      cards: [
+        { icon: "🖥️", text: "Kubernetes Test Cluster", delayMs: 0 },
+        { icon: "🚪", text: "Ingress Gateway", delayMs: 3200 },
+        { icon: "📦", text: "Pod", delayMs: 6400 },
+      ],
+      background: "assets/k8s-explainer-background.png",
+    },
+  };
 
   /**
    * Motion state for a single card at global time t (ms).
@@ -199,9 +221,12 @@
    * Draws one frame of the card animation at time t (ms) onto a canvas.
    * `restY` is the resting baseline (bottom) Y coordinate for all cards.
    * Accepts the same { card1, card2 } / { cards: [...] } config shapes as mount().
+   * `onBackground(ctx)`, if given, runs right after the clear and before any
+   * cards are drawn — e.g. to paint a background image under them.
    */
-  function drawCanvasFrame(ctx, width, height, t, config, restY) {
+  function drawCanvasFrame(ctx, width, height, t, config, restY, onBackground) {
     ctx.clearRect(0, 0, width, height);
+    if (onBackground) onBackground(ctx);
 
     const cards = normalizeCards(config);
     const dims = cards.map(function (card) { return measureCard(ctx, card); });
@@ -220,6 +245,7 @@
     STYLE: STYLE,
     STAGGER_MS: STAGGER_MS,
     DURATION_MS: DURATION_MS,
+    PRESETS: PRESETS,
     springState: springState,
     computeDuration: computeDuration,
     normalizeCards: normalizeCards,

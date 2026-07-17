@@ -1,8 +1,11 @@
 # Master Spec: Kubernetes Flow Explainer (3rd output + engine generalization)
 
-Status: **implemented** (2026-07-17). Scope decided via clarifying questions on
-2026-07-17: new standalone page, background image pre-generated as a static asset,
-sequential staged reveal (Cluster → Ingress Gateway → Pod).
+Status: **implemented** (2026-07-17), **extended** (2026-07-18, see §8-9). Scope
+decided via clarifying questions on 2026-07-17: new standalone page, background
+image pre-generated as a static asset, sequential staged reveal (Cluster → Ingress
+Gateway → Pod). Extended 2026-07-18: the Kubernetes example became the shared
+default content across all three outputs, not just `explainer.html` — see §8 for
+what changed and why, §9 for a full project reference.
 
 This spec sits alongside `problem.md` (which remains the unmodified motion/visual
 contract for the base 2-card "Elastic Rise" spring) and extends the toolbox described
@@ -178,3 +181,113 @@ your own 3-stage explainer" tool is wanted later, that's a follow-up, not this s
   `requestAnimationFrame` in that unfocused tab (confirmed by the same freeze on the
   pre-existing, unmodified `video-live.html` — not a regression); load `explainer.html`
   in a normal foreground browser tab to see the live animation.
+
+---
+
+## 8. Addendum (2026-07-18): unified Kubernetes example across all three outputs
+
+**This reverses §5's original "MP4/live-overlay K8s variants: out of scope" call.**
+Decided via clarifying question that day: `video-recorded.html` and `explainer.html`
+both get the Kubernetes background + content; `video-live.html` switches its default
+*content* to the same Kubernetes example but stays **transparent** (no background
+image) — a live-compositing OBS/vMix overlay can't carry a baked-in background
+without losing the ability to composite over the stream underneath it, so that page
+is deliberately excluded from "all outputs get a background."
+
+### 8.1 Engine changes
+
+- **`LowerThirds.PRESETS.kubernetes`** — the shared example content (`cards`, same
+  three entries/delays as §3.1) plus `background` (the image path), added to
+  `lower-thirds.js` as the single source of truth. All three output pages read from
+  this preset for their defaults instead of each hardcoding their own copy — avoids
+  the "Real Jobs / Real People" hardcoded-in-three-places drift this same repo had
+  before this addendum.
+- **`drawCanvasFrame(ctx, w, h, t, config, restY, onBackground)`** — new optional
+  6th parameter. Runs right after the per-frame `clearRect` and before any card is
+  drawn, so a caller can paint a background image without the engine needing to know
+  anything about image loading/decoding. Purely additive — every existing call site
+  omitting the 6th arg behaves exactly as before.
+
+### 8.2 `video-recorded.html`
+
+- Form grew a third icon/text pair; all three default to the Kubernetes preset's
+  values (typing over them still works exactly as before — it's a general tool,
+  not locked to K8s).
+- A preloaded `Image` (`assets/k8s-explainer-background.png`) is drawn full-canvas,
+  then the same dark linear-gradient treatment `explainer.html` uses (so contrast
+  reads the same way in both places), via the new `onBackground` callback — plumbed
+  through `LowerThirdsRecorder.runAnimation`/`record`, which now also accept an
+  optional `onBackground` argument and forward it into `drawCanvasFrame`.
+- **Bug fixed in passing:** `runAnimation`'s loop previously compared against the
+  fixed `LowerThirds.DURATION_MS` (sized for the legacy 2-card/150ms-stagger case,
+  ~1350ms) regardless of how many cards or what delays the config actually used —
+  correct for the original 2-card tool, but would have silently cut a 3-stage
+  Kubernetes recording off after ~1.3s instead of the ~7.6s it needs. Now computes
+  `LowerThirds.computeDuration(normalizeCards(config))` once per run instead.
+
+### 8.3 `video-live.html`
+
+- Same third icon/text field added; defaults to the Kubernetes preset's `cards`
+  (mapped with the preset's delays) via `currentConfig()`; URL query-param API
+  gained `icon3`/`text3` to match. `mount()` itself already computed duration
+  dynamically per §2/§7, so no fixed-duration bug existed here the way it did in
+  `video-recorded.html`.
+- **No background image** — `.lt-transparent`/the real transparent background in
+  overlay mode are untouched. This is the one output that intentionally does not
+  follow "all outputs get a background."
+
+### 8.4 Known gap
+
+The hosted API (`server/main.go`, §"Hosted API" in `CLAUDE.md`) still only accepts
+`{icon1, text1, icon2, text2}` — it was not extended to the 3-card shape or given a
+background option as part of this addendum. Calling it still produces a 2-card,
+background-free video even though the page it drives (`video-recorded.html`) now
+defaults to 3 cards with a background when used directly. Documented as a known
+limitation in `mcp-guide.html`'s Option 3 section rather than silently mismatched;
+extending `server/main.go` to accept `cards`/background would be a natural follow-up
+if the hosted API needs to match the page's new default exactly.
+
+---
+
+## 9. Project reference (audit — 2026-07-18)
+
+A from-scratch pass over every doc in the repo, to keep this page a genuine
+"catch me up on everything" reference rather than just the original explainer spec.
+Each area's authoritative source stays where it was — this section points at it
+rather than duplicating it, so it can't silently drift out of sync.
+
+| Area | Authoritative source |
+| --- | --- |
+| Motion/visual spec (the math, colors, dimensions) | [`problem.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md) — unmodified since day one, deliberately; see `CLAUDE.md`'s "not something to edit when code changes." |
+| Architecture, conventions, file-by-file breakdown | [`CLAUDE.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/CLAUDE.md) |
+| Project pitch, domain, requirements, environment links | [`README.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/README.md) / `index.html` |
+| Programmatic consumption (browser automation / custom MCP server / hosted API), plus copy-pasteable agent prompts | [`MCP_GUIDE.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md) / `mcp-guide.html` |
+| Hosted Go/Fly.io API — endpoints, auth, deploy/operate | [`server/README.md`](https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/server/README.md) |
+| Video-production tooling decisions (ffmpeg skill, why not Remotion) | `recommendation.html` |
+| This feature's design/implementation record | this file / `master-spec.html` (you are here) |
+| Original Canva reference presentation | `canva.md` |
+
+**Site-wide features not covered above, added incrementally across sessions and
+easy to lose track of** (all implemented, all live):
+
+- **Light/dark theme toggle** — footer button, `data-theme` on `<html>`,
+  `localStorage`-persisted, site-chrome-only (card visuals never themed). See
+  `CLAUDE.md`'s "Theming" section.
+- **`overflow-wrap: break-word`** on `body`, inherited site-wide, so prose/table
+  text can't overflow narrow viewports; `<pre>` blocks keep their horizontal
+  scroll by design (browsers never wrap `white-space: pre`).
+- **Floating note-taker** on `master-spec.html` — fixed position, `localStorage`
+  per-page, copy-to-clipboard.
+- **"Download standalone HTML"** on `explainer.html` — client-side bundling of
+  CSS/JS/background into one dependency-free `.html` file (data URI for the
+  image), verified via a real `DOMParser` pass rather than text search (a naive
+  regex/text search false-positives on the exporter's own embedded source code —
+  see `tests/test_pages.py`'s `AssetLinkExtractor` for the same lesson applied to
+  the test suite).
+- **`tests/test_pages.py`** + `.github/workflows/test-pages.yml` — stdlib-only
+  Python smoke test (serves the repo locally, checks every page + every local
+  asset it references), runs in CI on every push/PR alongside the GitHub Pages
+  deploy workflow.
+- **Footer** carries links to this spec, the hosted API, the GitHub repo, and
+  GitHub Actions, plus the theme toggle — one shared component
+  (`assets/js/nav.js`), not duplicated per page.

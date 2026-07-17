@@ -38,41 +38,65 @@ One shared animation engine drives **three** output pages:
   fixed at `STAGGER_MS`) or an arbitrary-length `{cards: [{icon, text, delayMs}, ...]}`
   — `normalizeCards()` reconciles the two, so existing pages didn't need to
   change when N-card support was added for `explainer.html`.
+  - `LowerThirds.PRESETS.kubernetes` — the shared example content (Cluster →
+    Ingress Gateway → Pod, same delays as `explainer.html`) and its background
+    image path. All three output pages default to this preset rather than each
+    hardcoding their own copy of the same array — see "one shared example,
+    three outputs" below.
   - `LowerThirds.mount(container, config)` — DOM/CSS renderer (transform + opacity
     on `.lt-card` elements), used by `video-live.html` and `explainer.html`.
-  - `LowerThirds.drawCanvasFrame(ctx, w, h, t, config, restY)` — Canvas 2D renderer,
-    used by `video-recorded.html` because `MediaRecorder`/`captureStream()` needs a
-    canvas or video element to record from, not arbitrary DOM.
+  - `LowerThirds.drawCanvasFrame(ctx, w, h, t, config, restY, onBackground)` — Canvas
+    2D renderer, used by `video-recorded.html` because `MediaRecorder`/`captureStream()`
+    needs a canvas or video element to record from, not arbitrary DOM. The optional
+    `onBackground(ctx)` callback runs right after the per-frame clear and before any
+    card is drawn — that's how `video-recorded.html` paints a background image
+    without the engine needing to know anything about image loading.
   - `LowerThirds.computeDuration(cards)` — settle time for a card set; used
     instead of the fixed `DURATION_MS` constant wherever card delays are
-    caller-supplied rather than the fixed 2-card stagger.
+    caller-supplied rather than the fixed 2-card stagger. Both
+    `LowerThirdsRecorder.runAnimation` (video-recorded.html) and `mount()` use
+    this so recordings/animations run exactly as long as the configured cards
+    need, not a fixed 2-card duration.
 
-- 🎥 **`video-recorded.html`** — type lower-third text, render to `<canvas>`, capture
-  with `canvas.captureStream()` + `MediaRecorder`, and download the result as a
-  video file (WebM/MP4) to drop into an edit timeline.
+### One shared example, three outputs
 
-- 📡 **`video-live.html`** — same text inputs, but renders live via the DOM/CSS path
-  with a transparent background, meant to be pointed at directly as a browser
-  source (OBS/vMix) for live sessions. Reusable two ways: the on-page form, or a
-  query-string API (`?icon1=&text1=&icon2=&text2=&autoplay=1`) that strips the
-  page's chrome and autoplays — see the `lt-overlay-mode` body class and the
-  autoplay handling at the bottom of the file.
+All three output pages default to `LowerThirds.PRESETS.kubernetes` — typing
+your own text still works everywhere (that's the whole point of the toolbox),
+but out of the box they demo the same thing so a viewer sees consistent
+content across a recorded clip, a live overlay, and the interactive explainer:
 
-- 🧭 **`explainer.html`** — a worked teaching example, not a general-purpose form:
-  three staged cards (Kubernetes Test Cluster → Ingress Gateway → Pod) rise
-  several seconds apart (not the base 150ms stagger) via the N-card engine
-  support above, each accompanied by a caption and a directional SVG arrow drawn
-  once both endpoint cards have settled. The background lives on its own
-  `.lt-bg-layer` (separate from `.lt-stage`) so it can fade/scale in sync with
-  Play, "landing" together with the first card rather than sitting there
-  statically — see `resetCaptionsAndArrows`/`playSequence` in the page's own
-  script. Uses a pre-generated background image
-  (`assets/k8s-explainer-background.png`) — see `MASTER_SPEC.md` for the full
-  spec, including the exact image-generation prompt. Supports `?autoplay=1`
-  plus `text1-3`/`emoji1-3`/`bgprompt` overrides. Its "⬇ Download standalone
-  HTML" button bundles the page (CSS/JS inlined, background as a data URI)
-  into one portable, dependency-free `.html` file client-side — no server
-  involved, matches the static-site constraint.
+- 🎥 **`video-recorded.html`** — type lower-third text (3 icon/text pairs, K8s by
+  default), render to `<canvas>` **with the Kubernetes background painted behind
+  the cards** (`bgImage` + gradient, drawn via the `onBackground` callback above),
+  capture with `canvas.captureStream()` + `MediaRecorder`, and download the
+  result as a video file (WebM/MP4) to drop into an edit timeline.
+
+- 📡 **`video-live.html`** — same idea, defaults to the same K8s text, but
+  renders live via the DOM/CSS path with a **transparent** background — no
+  background image here, deliberately: this page is meant to be pointed at
+  directly as a browser source (OBS/vMix) for live sessions, and compositing
+  requires real transparency, so it can't also carry a baked-in background the
+  way the other two outputs do. Reusable two ways: the on-page form, or a
+  query-string API (`?icon1=&text1=&icon2=&text2=&icon3=&text3=&autoplay=1`)
+  that strips the page's chrome and autoplays — see the `lt-overlay-mode` body
+  class and the autoplay handling at the bottom of the file.
+
+- 🧭 **`explainer.html`** — the same `PRESETS.kubernetes` content, staged one
+  card at a time (not simultaneously) several seconds apart via the N-card
+  engine support above, each accompanied by a caption and a directional SVG
+  arrow drawn once both endpoint cards have settled. The background lives on
+  its own `.lt-bg-layer` (separate from `.lt-stage`) so it can fade/scale in
+  sync with Play, "landing" together with the first card rather than sitting
+  there statically — see `resetCaptionsAndArrows`/`playSequence` in the page's
+  own script. Supports `?autoplay=1` plus `text1-3`/`emoji1-3`/`bgprompt`
+  overrides. Its "⬇ Download standalone HTML" button bundles the page (CSS/JS
+  inlined, background as a data URI) into one portable, dependency-free
+  `.html` file client-side — no server involved, matches the static-site
+  constraint.
+
+The background image itself (`assets/k8s-explainer-background.png`) is a
+single pre-generated static asset shared by both `video-recorded.html` and
+`explainer.html` — see `MASTER_SPEC.md` for the exact image-generation prompt.
 
 - **`assets/js/nav.js`** — injects the shared top nav and footer into every page
   (`document.body.insertBefore`/`appendChild`). There's no templating/build step,
@@ -98,10 +122,13 @@ One shared animation engine drives **three** output pages:
   or the hosted Go/Fly.io API in `server/`. Keep both in sync — `mcp-guide.html`
   renders the same guidance as `MCP_GUIDE.md` (pattern matches `recommendation.html`).
 
-- **`MASTER_SPEC.md`** — the design/implementation spec for the `explainer.html`
-  worked example (staging timings, background image prompt, engine changes). Not
-  a living doc like `problem.md`; it records what was decided and built for that
-  feature.
+- **`MASTER_SPEC.md`** / **`master-spec.html`** — the design/implementation spec
+  for the `explainer.html` worked example and the shared-preset/background work
+  (staging timings, background image prompt, engine changes). Not a living doc
+  like `problem.md`; it records what was decided and built for that feature.
+  `master-spec.html` renders the same content on-site (pattern matches
+  `recommendation.html`/`mcp-guide.html`) and adds a floating note-taker widget
+  (`.note-taker`, fixed position, `localStorage`-persisted, copy-to-clipboard).
 
 - **`.claude/skills/ffmpeg-usage/`** — an MIT-licensed ffmpeg skill (vendored from
   ychoi-kr/claude-ffmpeg-skill) for post-processing exported video (format
@@ -117,6 +144,18 @@ browser. It is not part of the static site's GitHub Pages deploy and has its
 own Dockerfile/`fly.toml` inside `server/`. Auth is a bearer token stored as a
 Fly.io secret (`API_TOKEN`), never committed — see `mcp-guide.html` for request
 examples and `server/README.md` for deploy/operate instructions.
+
+## Theming
+
+`assets/css/style.css` defines site chrome as CSS custom properties on `:root`,
+with a `:root[data-theme="light"]` override block. `assets/js/nav.js` builds a
+toggle button in the footer (`.theme-toggle`) that flips `data-theme` on
+`<html>` and persists the choice to `localStorage` (`lower-thirds-theme`) —
+every page picks it up on load via `applyStoredTheme()`. This only themes site
+chrome (nav, footer, panels, buttons, text); the lower-thirds card visuals
+(`.lt-card` etc.) are intentionally excluded and stay fixed to `problem.md`'s
+spec regardless of theme — a broadcast graphic shouldn't change look based on
+the tool's own UI preference.
 
 ## Secrets
 
@@ -136,6 +175,15 @@ long-term on disk. The Fly.io-hosted API's `API_TOKEN` lives only as a Fly secre
   the same visual spec through two different rendering paths.
 - `problem.md` is the design spec, not implementation — treat it as the reference
   to check new work against, not something to edit when code changes.
-- New output pages: add them to `PAGES` in `assets/js/nav.js`, and to the
-  three-outputs list in `README.md` / `index.html` / this file so the "N shared
-  outputs, one engine" framing stays accurate.
+- New output pages: add them to `PAGES` in `assets/js/nav.js`, to `PAGES` in
+  `tests/test_pages.py`, and to the three-outputs list in `README.md` /
+  `index.html` / this file so the "N shared outputs, one engine" framing stays
+  accurate.
+- Shared example content changes (e.g. retiring/adding a `PRESETS` entry)
+  belong in `lower-thirds.js`, not copy-pasted per page — see "one shared
+  example, three outputs" above.
+- `body { overflow-wrap: break-word }` in `style.css` is inherited site-wide so
+  prose/table text can't overflow narrow viewports; `<pre>` blocks are exempt
+  by design (browsers never wrap `white-space: pre` regardless of
+  `overflow-wrap`), so code/URL examples keep their intentional horizontal
+  scroll — don't fight that by adding wrapping overrides to `pre`.

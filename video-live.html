@@ -22,22 +22,30 @@
   <main>
     <h1>📡 Live Overlay</h1>
     <p>
-      Type the two lower-third labels and hit <strong>Play</strong> to preview the
+      Type the lower-third labels and hit <strong>Play</strong> to preview the
       spring-rise animation exactly as it will appear as a live overlay (e.g. an OBS
       Browser Source). The checkerboard behind the cards represents transparency —
-      the real background is fully transparent.
+      the real background is fully transparent (unlike
+      <a href="video-recorded.html">video-recorded.html</a>/<a href="explainer.html">explainer.html</a>,
+      which paint a background — a transparent overlay can't, or it stops compositing
+      over your live video). Defaults to the same Kubernetes example content as the
+      other two outputs; change any field to play your own.
     </p>
 
     <div class="card-panel">
       <div class="field-row">
         <label for="icon1">Icon 1</label>
-        <input type="text" id="icon1" value="💼">
+        <input type="text" id="icon1" value="🖥️">
         <label for="text1">Text 1</label>
-        <input type="text" id="text1" value="Real Jobs">
+        <input type="text" id="text1" value="Kubernetes Test Cluster">
         <label for="icon2">Icon 2</label>
-        <input type="text" id="icon2" value="👤">
+        <input type="text" id="icon2" value="🚪">
         <label for="text2">Text 2</label>
-        <input type="text" id="text2" value="Real People">
+        <input type="text" id="text2" value="Ingress Gateway">
+        <label for="icon3">Icon 3</label>
+        <input type="text" id="icon3" value="📦">
+        <label for="text3">Text 3</label>
+        <input type="text" id="text3" value="Pod">
       </div>
       <button class="button" id="play-btn">▶ Play</button>
     </div>
@@ -58,10 +66,8 @@
       <p>Any page can drive the same engine directly:</p>
       <pre>&lt;script src="assets/js/lower-thirds.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-  LowerThirds.mount(document.getElementById("stage"), {
-    card1: { icon: "💼", text: "Real Jobs" },
-    card2: { icon: "👤", text: "Real People" },
-  });
+  LowerThirds.mount(document.getElementById("stage"), LowerThirds.PRESETS.kubernetes);
+  // or your own: { cards: [{ icon, text, delayMs }, ...] }
 &lt;/script&gt;</pre>
     </div>
   </main>
@@ -71,17 +77,17 @@
     (function () {
       var stage = document.getElementById("stage");
       var controller = null;
+      var KUBERNETES_DELAYS = LowerThirds.PRESETS.kubernetes.cards.map(function (c) { return c.delayMs; });
 
       function currentConfig() {
         return {
-          card1: {
-            icon: document.getElementById("icon1").value,
-            text: document.getElementById("text1").value,
-          },
-          card2: {
-            icon: document.getElementById("icon2").value,
-            text: document.getElementById("text2").value,
-          },
+          cards: [1, 2, 3].map(function (n) {
+            return {
+              icon: document.getElementById("icon" + n).value,
+              text: document.getElementById("text" + n).value,
+              delayMs: KUBERNETES_DELAYS[n - 1],
+            };
+          }),
         };
       }
 
@@ -94,10 +100,12 @@
       var params = new URLSearchParams(window.location.search);
       var exampleUrl = new URL(window.location.href);
       exampleUrl.search = "";
-      exampleUrl.searchParams.set("icon1", "💼");
-      exampleUrl.searchParams.set("text1", "Real Jobs");
-      exampleUrl.searchParams.set("icon2", "👤");
-      exampleUrl.searchParams.set("text2", "Real People");
+      exampleUrl.searchParams.set("icon1", "🖥️");
+      exampleUrl.searchParams.set("text1", "Kubernetes Test Cluster");
+      exampleUrl.searchParams.set("icon2", "🚪");
+      exampleUrl.searchParams.set("text2", "Ingress Gateway");
+      exampleUrl.searchParams.set("icon3", "📦");
+      exampleUrl.searchParams.set("text3", "Pod");
       exampleUrl.searchParams.set("autoplay", "1");
       document.getElementById("url-example").textContent = exampleUrl.toString();
 
@@ -108,10 +116,10 @@
         overlayWrap.appendChild(stage);
         document.querySelector("main").appendChild(overlayWrap);
 
-        if (params.has("icon1")) document.getElementById("icon1").value = params.get("icon1");
-        if (params.has("text1")) document.getElementById("text1").value = params.get("text1");
-        if (params.has("icon2")) document.getElementById("icon2").value = params.get("icon2");
-        if (params.has("text2")) document.getElementById("text2").value = params.get("text2");
+        [1, 2, 3].forEach(function (n) {
+          if (params.has("icon" + n)) document.getElementById("icon" + n).value = params.get("icon" + n);
+          if (params.has("text" + n)) document.getElementById("text" + n).value = params.get("text" + n);
+        });
         stage.classList.remove("lt-transparent");
         play();
       }

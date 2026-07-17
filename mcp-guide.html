@@ -28,7 +28,8 @@
       <ol>
         <li>
           <code>navigate</code> to
-          <code>video-recorded.html?icon1=💼&amp;text1=Real+Jobs&amp;icon2=👤&amp;text2=Real+People&amp;autorecord=1</code>.
+          <code>video-recorded.html?icon1=🖥️&amp;text1=Kubernetes+Test+Cluster&amp;icon2=🚪&amp;text2=Ingress+Gateway&amp;icon3=📦&amp;text3=Pod&amp;autorecord=1</code>
+          (the page's own default content — omit the params entirely for the same result).
         </li>
         <li>Poll for <code>document.getElementById("status").textContent === "Recording ready."</code>.</li>
         <li>Read <code>document.getElementById("download-link").href</code> (a <code>blob:</code> URL).</li>
@@ -63,15 +64,18 @@
         <li><code>GET /healthz</code> — no auth, returns <code>200 ok</code>.</li>
         <li>
           <code>POST /render</code> — requires <code>Authorization: Bearer $API_TOKEN</code>;
-          JSON body <code>{icon1, text1, icon2, text2}</code>; response body is
-          <code>video/webm</code> bytes.
+          JSON body <code>{icon1, text1, icon2, text2}</code> (2-card only for now —
+          see §"Which to use"); response body is <code>video/webm</code> bytes.
         </li>
       </ul>
-      <pre>curl -X POST https://lower-thirds-api.fly.dev/render \
+      <div class="prompt-block">
+        <pre>curl -X POST https://lower-thirds-api.fly.dev/render \
   -H "Authorization: Bearer $API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}' \
+  -d '{"icon1":"🖥️","text1":"Kubernetes Test Cluster","icon2":"🚪","text2":"Ingress Gateway"}' \
   -o lower-thirds.webm</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
       <p>
         <code>$API_TOKEN</code> is a Fly.io secret, never committed — see
         <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/server/README.md">server/README.md</a>
@@ -83,39 +87,59 @@
       <h2>🗣️ Prompts to give an AI agent</h2>
       <p>
         If you're asking Claude (or any AI agent) to actually consume this
-        project rather than reading about it, here's copy-pasteable phrasing
-        for each option above.
+        project rather than reading about it, hit <strong>📋 Copy</strong> on
+        any block below and paste it straight into your agent's chat — each
+        one is a complete, self-contained instruction it can act on to
+        trigger one of the outputs above and hand you back the result.
       </p>
 
       <h3>🖱️ For Option 1 (an agent with browser tools)</h3>
-      <pre>Using your browser tools, navigate to
-https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html?icon1=💼&text1=Real+Jobs&icon2=👤&text2=Real+People&autorecord=1
+      <div class="prompt-block">
+        <pre>Using your browser tools, navigate to
+https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html?autorecord=1
+(the page defaults to the Kubernetes Test Cluster / Ingress Gateway / Pod
+example — add &icon1=&text1=&icon2=&text2=&icon3=&text3= to override it).
 Wait until the on-page status reads "Recording ready.", then read the
 download-link element's href and give me the video.</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
 
       <h3>🧭 For the Kubernetes explainer (Option 1, staged content)</h3>
-      <pre>Using your browser tools, navigate to
-https://rifaterdemsahin.github.io/animation-rising-lower-thirds/explainer.html?text1=API+Gateway&emoji1=🚪&text2=Auth+Service&emoji2=🔐&text3=Database&emoji3=🗄️&autoplay=1
-and describe what happens on screen as each stage rises.</pre>
+      <div class="prompt-block">
+        <pre>Using your browser tools, navigate to
+https://rifaterdemsahin.github.io/animation-rising-lower-thirds/explainer.html?autoplay=1
+and describe what happens on screen as each of the three stages rises
+(Kubernetes Test Cluster, then Ingress Gateway, then Pod). Add
+&text1=&emoji1=&text2=&emoji2=&text3=&emoji3= to swap in your own three
+stages instead.</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
 
       <h3>🧩 For Option 2 (an agent building its own MCP server)</h3>
-      <pre>Build me an MCP server with a render_lower_third(icon1, text1, icon2, text2)
+      <div class="prompt-block">
+        <pre>Build me an MCP server with a render_lower_third(icon1, text1, icon2, text2)
 tool that returns a video/webm file. Drive it by opening
 https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html
 with those params + &autorecord=1 in a headless browser, waiting for
 "Recording ready.", then fetching the download-link blob as base64.
 See MCP_GUIDE.md "Option 2" in the animation-rising-lower-thirds repo
 for a working Puppeteer sketch.</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
 
       <h3>🚀 For Option 3 (an agent with HTTP/curl access — no browser needed)</h3>
-      <pre>Call this API to render a lower-thirds video, then save the result:
+      <div class="prompt-block">
+        <pre>Call this API to render a lower-thirds video, then save the result:
 
 POST https://lower-thirds-api.fly.dev/render
 Headers: Authorization: Bearer $API_TOKEN, Content-Type: application/json
-Body: {"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}
+Body: {"icon1":"🖥️","text1":"Kubernetes Test Cluster","icon2":"🚪","text2":"Ingress Gateway"}
 
 The response body is the raw video/webm file — write it to lower-thirds.webm.
-($API_TOKEN is a secret; ask the repo owner or see server/README.md.)</pre>
+($API_TOKEN is a secret; ask the repo owner or see server/README.md. This
+endpoint currently supports 2 cards only, not the full 3-stage example.)</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
     </div>
 
     <div class="card-panel">
@@ -127,6 +151,23 @@ The response body is the raw video/webm file — write it to lower-thirds.webm.
       </ul>
     </div>
   </main>
+
+  <script>
+    (function () {
+      document.querySelectorAll(".copy-prompt-btn").forEach(function (btn) {
+        var pre = btn.parentElement.querySelector("pre");
+        var originalLabel = btn.textContent;
+        btn.addEventListener("click", function () {
+          navigator.clipboard.writeText(pre.textContent).then(function () {
+            btn.textContent = "✅ Copied!";
+          }, function () {
+            btn.textContent = "❌ Copy failed";
+          });
+          setTimeout(function () { btn.textContent = originalLabel; }, 1800);
+        });
+      });
+    })();
+  </script>
   <script src="assets/js/nav.js"></script>
 </body>
 </html>

@@ -20,22 +20,29 @@
   <main>
     <h1>🎥 Recorded Video</h1>
     <p>
-      Type the two lower-third labels, hit <strong>Record</strong>, and this page
-      renders the same spring-rise animation to a <code>&lt;canvas&gt;</code>,
-      captures it frame-by-frame with <code>MediaRecorder</code>, and hands you a
-      downloadable video file — no editor round-trip needed.
+      Type the lower-third labels, hit <strong>Record</strong>, and this page
+      renders the same spring-rise animation — staged three cards deep, over the
+      shared Kubernetes-flow background — to a <code>&lt;canvas&gt;</code>, captures
+      it frame-by-frame with <code>MediaRecorder</code>, and hands you a
+      downloadable video file — no editor round-trip needed. Defaults to the
+      Kubernetes example (same content as <a href="explainer.html">explainer.html</a>);
+      change any field to record your own.
     </p>
 
     <div class="card-panel">
       <div class="field-row">
         <label for="icon1">Icon 1</label>
-        <input type="text" id="icon1" value="💼">
+        <input type="text" id="icon1" value="🖥️">
         <label for="text1">Text 1</label>
-        <input type="text" id="text1" value="Real Jobs">
+        <input type="text" id="text1" value="Kubernetes Test Cluster">
         <label for="icon2">Icon 2</label>
-        <input type="text" id="icon2" value="👤">
+        <input type="text" id="icon2" value="🚪">
         <label for="text2">Text 2</label>
-        <input type="text" id="text2" value="Real People">
+        <input type="text" id="text2" value="Ingress Gateway">
+        <label for="icon3">Icon 3</label>
+        <input type="text" id="icon3" value="📦">
+        <label for="text3">Text 3</label>
+        <input type="text" id="text3" value="Pod">
       </div>
       <button class="button secondary" id="preview-btn">▶ Preview</button>
       <button class="button" id="record-btn">⏺ Record &amp; Download</button>
@@ -71,13 +78,11 @@
       <p>Call the engine and recorder directly from your own script:</p>
       <pre>&lt;script src="assets/js/lower-thirds.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-  var config = {
-    card1: { icon: "💼", text: "Real Jobs" },
-    card2: { icon: "👤", text: "Real People" },
-  };
+  var config = LowerThirds.PRESETS.kubernetes; // or your own { cards: [...] }
 
-  // Drive any canvas yourself, frame by frame:
-  LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, tMs, config, restY);
+  // Drive any canvas yourself, frame by frame (6th arg paints a background
+  // image before the cards, e.g. LowerThirds.PRESETS.kubernetes.background):
+  LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, tMs, config, restY, onBackground);
 
   // Or reuse this page's recorder end-to-end:
   window.LowerThirdsRecorder.record(canvas, config).then(function (blob) {
@@ -95,16 +100,18 @@
      * callable directly from other scripts (see the "JS API" panel on-page).
      */
     (function () {
-      function runAnimation(ctx, canvas, config, onFrame, onDone) {
+      function runAnimation(ctx, canvas, config, onFrame, onDone, onBackground) {
+        var cards = LowerThirds.normalizeCards(config);
+        var duration = LowerThirds.computeDuration(cards);
         var rafId = null;
         var start = null;
 
         function frame(now) {
           if (start === null) start = now;
           var t = now - start;
-          LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, t, config, canvas.height - 160);
+          LowerThirds.drawCanvasFrame(ctx, canvas.width, canvas.height, t, config, canvas.height - 160, onBackground);
           if (onFrame) onFrame(t);
-          if (t < LowerThirds.DURATION_MS) {
+          if (t < duration) {
             rafId = requestAnimationFrame(frame);
           } else {
             rafId = null;
@@ -117,7 +124,7 @@
         };
       }
 
-      function record(canvas, config) {
+      function record(canvas, config, onBackground) {
         return new Promise(function (resolve, reject) {
           if (typeof MediaRecorder === "undefined") {
             reject(new Error("MediaRecorder isn't supported in this browser."));
@@ -141,7 +148,7 @@
           recorder.start();
           runAnimation(ctx, canvas, config, null, function () {
             recorder.stop();
-          });
+          }, onBackground);
         });
       }
 
@@ -154,16 +161,38 @@
       var ctx = canvas.getContext("2d");
       var statusEl = document.getElementById("status");
 
+      // Background image, shared with explainer.html — always drawn behind
+      // the cards regardless of what text is typed (see MASTER_SPEC.md: the
+      // recorded-video output gets a background the same way the interactive
+      // HTML output does; only the transparent live overlay stays background-free).
+      var bgImage = new Image();
+      bgImage.src = LowerThirds.PRESETS.kubernetes.background;
+
+      function drawBackground(bgCtx) {
+        if (bgImage.complete && bgImage.naturalWidth) {
+          bgCtx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+          var gradient = bgCtx.createLinearGradient(0, 0, 0, canvas.height);
+          gradient.addColorStop(0, "rgba(6, 16, 15, 0.35)");
+          gradient.addColorStop(0.78, "rgba(6, 16, 15, 0.92)");
+          bgCtx.fillStyle = gradient;
+          bgCtx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          bgCtx.fillStyle = "#06100f";
+          bgCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      var KUBERNETES_DELAYS = LowerThirds.PRESETS.kubernetes.cards.map(function (c) { return c.delayMs; });
+
       function fieldConfig() {
         return {
-          card1: {
-            icon: document.getElementById("icon1").value,
-            text: document.getElementById("text1").value,
-          },
-          card2: {
-            icon: document.getElementById("icon2").value,
-            text: document.getElementById("text2").value,
-          },
+          cards: [1, 2, 3].map(function (n) {
+            return {
+              icon: document.getElementById("icon" + n).value,
+              text: document.getElementById("text" + n).value,
+              delayMs: KUBERNETES_DELAYS[n - 1],
+            };
+          }),
         };
       }
 
@@ -179,7 +208,7 @@
 
       function recordCurrentFields() {
         statusEl.textContent = "Recording…";
-        LowerThirdsRecorder.record(canvas, fieldConfig()).then(showResult, function (err) {
+        LowerThirdsRecorder.record(canvas, fieldConfig(), drawBackground).then(showResult, function (err) {
           statusEl.textContent = err.message;
         });
       }
@@ -188,7 +217,7 @@
         statusEl.textContent = "Previewing…";
         LowerThirdsRecorder.runAnimation(ctx, canvas, fieldConfig(), null, function () {
           statusEl.textContent = "Preview done.";
-        });
+        }, drawBackground);
       });
 
       document.getElementById("record-btn").addEventListener("click", recordCurrentFields);
@@ -196,17 +225,19 @@
       var params = new URLSearchParams(window.location.search);
       var exampleUrl = new URL(window.location.href);
       exampleUrl.search = "";
-      exampleUrl.searchParams.set("icon1", "💼");
-      exampleUrl.searchParams.set("text1", "Real Jobs");
-      exampleUrl.searchParams.set("icon2", "👤");
-      exampleUrl.searchParams.set("text2", "Real People");
+      exampleUrl.searchParams.set("icon1", "🖥️");
+      exampleUrl.searchParams.set("text1", "Kubernetes Test Cluster");
+      exampleUrl.searchParams.set("icon2", "🚪");
+      exampleUrl.searchParams.set("text2", "Ingress Gateway");
+      exampleUrl.searchParams.set("icon3", "📦");
+      exampleUrl.searchParams.set("text3", "Pod");
       exampleUrl.searchParams.set("autorecord", "1");
       document.getElementById("url-example").textContent = exampleUrl.toString();
 
-      if (params.has("icon1")) document.getElementById("icon1").value = params.get("icon1");
-      if (params.has("text1")) document.getElementById("text1").value = params.get("text1");
-      if (params.has("icon2")) document.getElementById("icon2").value = params.get("icon2");
-      if (params.has("text2")) document.getElementById("text2").value = params.get("text2");
+      [1, 2, 3].forEach(function (n) {
+        if (params.has("icon" + n)) document.getElementById("icon" + n).value = params.get("icon" + n);
+        if (params.has("text" + n)) document.getElementById("text" + n).value = params.get("text" + n);
+      });
       if (params.get("autorecord") === "1") {
         recordCurrentFields();
       }

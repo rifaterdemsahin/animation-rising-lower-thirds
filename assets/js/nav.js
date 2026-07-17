@@ -16,6 +16,7 @@
 
   var GITHUB_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds";
   var ACTIONS_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds/actions";
+  var API_URL = "https://lower-thirds-api.fly.dev";
   var THEME_KEY = "lower-thirds-theme";
 
   function applyStoredTheme() {
@@ -95,6 +96,7 @@
       "<span>🎬 Animation Helper for Rising Lower Thirds</span>" +
       '<span class="site-footer-links">' +
       '<a href="master-spec.html">🗂️ Master Spec</a>' +
+      '<a href="' + API_URL + '" target="_blank" rel="noopener">🚀 API →</a>' +
       '<a href="' + GITHUB_URL + '" target="_blank" rel="noopener">📦 View project on GitHub →</a>' +
       '<a href="' + ACTIONS_URL + '" target="_blank" rel="noopener">⚙️ Actions →</a>' +
       "</span>";
