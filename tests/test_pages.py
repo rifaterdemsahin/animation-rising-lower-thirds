@@ -12,13 +12,13 @@ convention (see CLAUDE.md) — run with: python3 tests/test_pages.py
 
 import http.server
 import os
-import re
 import socketserver
 import sys
 import threading
 import time
 import urllib.error
 import urllib.request
+from html.parser import HTMLParser
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -33,7 +33,35 @@ PAGES = [
     ("master-spec.html", ["<title>Master Spec", 'id="note-taker"']),
 ]
 
-ASSET_ATTR_RE = re.compile(r'(?:href|src)="([^"]+)"')
+ASSET_TAGS = {"link": "href", "script": "src", "img": "src"}
+
+
+class AssetLinkExtractor(HTMLParser):
+    """Pulls href/src out of actual <link>/<script>/<img> tags only.
+
+    Deliberately uses a real HTML parser rather than a text regex: this repo's
+    pages embed their own JS source (e.g. explainer.html's standalone-HTML
+    exporter) as inline <script> text, which can contain literal-looking
+    href="..."/src="..." substrings inside string/regex literals. A parser
+    correctly treats <script>/<style> bodies as raw CDATA and never emits
+    start-tag events for text inside them, so those false positives can't
+    leak into the extracted asset list the way a blanket regex would.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.assets = []
+
+    def handle_starttag(self, tag, attrs):
+        attr_name = ASSET_TAGS.get(tag)
+        if not attr_name:
+            return
+        value = dict(attrs).get(attr_name)
+        if not value:
+            return
+        if value.startswith(("http://", "https://", "#", "mailto:", "data:")):
+            return
+        self.assets.append(value.split("?")[0].split("#")[0])
 
 
 def find_free_port():
@@ -58,10 +86,9 @@ def fetch(url):
 
 def local_assets(html):
     """Local (non-http, non-anchor, non-data) asset paths referenced in the page."""
-    for match in ASSET_ATTR_RE.findall(html):
-        if match.startswith(("http://", "https://", "#", "mailto:", "data:")):
-            continue
-        yield match.split("?")[0].split("#")[0]
+    extractor = AssetLinkExtractor()
+    extractor.feed(html)
+    return extractor.assets
 
 
 def main():

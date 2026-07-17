@@ -21,6 +21,7 @@
 
     <div class="card-panel">
       <div class="lt-stage lt-explainer-bg" id="stage">
+        <div class="lt-bg-layer" id="bg-layer"></div>
         <svg class="lt-arrows" id="arrows-svg">
           <defs>
             <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -32,7 +33,11 @@
         </svg>
         <div id="cards-mount"></div>
       </div>
-      <button class="button" id="play-btn" type="button">▶ Play</button>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="button" id="play-btn" type="button">▶ Play</button>
+        <button class="button secondary" id="download-btn" type="button">⬇ Download standalone HTML</button>
+      </div>
+      <span id="download-status" style="font-size: 13px; color: var(--text-dim);"></span>
 
       <ol class="lt-caption-list" id="caption-list">
         <li class="lt-caption" id="caption-1">
@@ -122,6 +127,7 @@ Save to: assets/k8s-explainer-background.png</pre>
       }
 
       var stage = document.getElementById("stage");
+      var bgLayer = document.getElementById("bg-layer");
       var cardsMount = document.getElementById("cards-mount");
       var playBtn = document.getElementById("play-btn");
       var timers = [];
@@ -162,7 +168,15 @@ Save to: assets/k8s-explainer-background.png</pre>
         clearTimers();
         resetCaptionsAndArrows();
         if (controller) controller.stop();
+
+        // Reset the background to its dim/zoomed-out starting state, force a
+        // reflow so the browser commits it, then re-add "landed" — this lets
+        // the CSS transition replay on every Play/Replay press, not just once.
+        bgLayer.classList.remove("lt-bg-landed");
+        void bgLayer.offsetWidth;
+
         controller = LowerThirds.mount(cardsMount, STAGE_CONFIG);
+        bgLayer.classList.add("lt-bg-landed");
 
         playBtn.disabled = true;
         playBtn.textContent = "▶ Playing…";
@@ -186,6 +200,84 @@ Save to: assets/k8s-explainer-background.png</pre>
       }
 
       playBtn.addEventListener("click", playSequence);
+
+      function toDataUri(url) {
+        return fetch(url)
+          .then(function (r) { return r.blob(); })
+          .then(function (blob) {
+            return new Promise(function (resolve, reject) {
+              var reader = new FileReader();
+              reader.onloadend = function () { resolve(reader.result); };
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+          });
+      }
+
+      // Bundles this page into one self-contained .html file (CSS/JS inlined,
+      // background image embedded as a data URI) so it can be shared/opened
+      // anywhere with no external dependencies — a portable copy of the page,
+      // not a snapshot of the current animation frame.
+      function downloadStandaloneHtml() {
+        var downloadBtn = document.getElementById("download-btn");
+        var statusEl = document.getElementById("download-status");
+        downloadBtn.disabled = true;
+        statusEl.textContent = "Bundling…";
+
+        Promise.all([
+          fetch(window.location.pathname, { cache: "no-store" }).then(function (r) { return r.text(); }),
+          fetch("assets/css/style.css").then(function (r) { return r.text(); }),
+          fetch("assets/css/lower-thirds.css").then(function (r) { return r.text(); }),
+          fetch("assets/js/lower-thirds.js").then(function (r) { return r.text(); }),
+          fetch("assets/js/nav.js").then(function (r) { return r.text(); }),
+          toDataUri("assets/k8s-explainer-background.png"),
+          toDataUri("favicon.svg"),
+        ]).then(function (results) {
+          var pageHtml = results[0];
+          var styleCss = results[1];
+          var ltCss = results[2].split("../k8s-explainer-background.png").join(results[5]);
+          var ltJs = results[3];
+          var navJs = results[4];
+          var faviconDataUri = results[6];
+
+          var out = pageHtml
+            .replace(/<link rel="icon" href="favicon\.svg"[^>]*>/, function () {
+              return '<link rel="icon" href="' + faviconDataUri + '" type="image/svg+xml">';
+            })
+            .replace(/<link rel="stylesheet" href="assets\/css\/style\.css">/, function () {
+              return "<style>\n" + styleCss + "\n</style>";
+            })
+            .replace(/<link rel="stylesheet" href="assets\/css\/lower-thirds\.css">/, function () {
+              return "<style>\n" + ltCss + "\n</style>";
+            })
+            .replace(/<script src="assets\/js\/lower-thirds\.js"><\/script>/, function () {
+              return "<script>\n" + ltJs + "\n<" + "/script>";
+            })
+            .replace(/<script src="assets\/js\/nav\.js"><\/script>/, function () {
+              return "<script>\n" + navJs + "\n<" + "/script>";
+            });
+
+          var blob = new Blob([out], { type: "text/html" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "explainer-standalone.html";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          statusEl.textContent = "✅ Downloaded — fully self-contained, open it anywhere.";
+        }).catch(function (err) {
+          console.error(err);
+          statusEl.textContent = "❌ Download failed: " + err.message;
+        }).finally(function () {
+          downloadBtn.disabled = false;
+          setTimeout(function () { statusEl.textContent = ""; }, 4000);
+        });
+      }
+
+      document.getElementById("download-btn").addEventListener("click", downloadStandaloneHtml);
 
       var exampleUrl = new URL(window.location.href);
       exampleUrl.search = "";

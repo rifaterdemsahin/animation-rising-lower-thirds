@@ -62,9 +62,17 @@ One shared animation engine drives **three** output pages:
   three staged cards (Kubernetes Test Cluster → Ingress Gateway → Pod) rise
   several seconds apart (not the base 150ms stagger) via the N-card engine
   support above, each accompanied by a caption and a directional SVG arrow drawn
-  once both endpoint cards have settled. Uses a pre-generated background image
+  once both endpoint cards have settled. The background lives on its own
+  `.lt-bg-layer` (separate from `.lt-stage`) so it can fade/scale in sync with
+  Play, "landing" together with the first card rather than sitting there
+  statically — see `resetCaptionsAndArrows`/`playSequence` in the page's own
+  script. Uses a pre-generated background image
   (`assets/k8s-explainer-background.png`) — see `MASTER_SPEC.md` for the full
-  spec, including the exact image-generation prompt. Supports `?autoplay=1`.
+  spec, including the exact image-generation prompt. Supports `?autoplay=1`
+  plus `text1-3`/`emoji1-3`/`bgprompt` overrides. Its "⬇ Download standalone
+  HTML" button bundles the page (CSS/JS inlined, background as a data URI)
+  into one portable, dependency-free `.html` file client-side — no server
+  involved, matches the static-site constraint.
 
 - **`assets/js/nav.js`** — injects the shared top nav and footer into every page
   (`document.body.insertBefore`/`appendChild`). There's no templating/build step,

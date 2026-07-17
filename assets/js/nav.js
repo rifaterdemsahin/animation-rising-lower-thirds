@@ -16,6 +16,40 @@
 
   var GITHUB_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds";
   var ACTIONS_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds/actions";
+  var THEME_KEY = "lower-thirds-theme";
+
+  function applyStoredTheme() {
+    var stored = window.localStorage.getItem(THEME_KEY);
+    if (stored === "light" || stored === "dark") {
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+  }
+
+  function currentTheme() {
+    return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  }
+
+  function buildThemeToggle() {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "theme-toggle";
+
+    function render() {
+      var theme = currentTheme();
+      btn.textContent = theme === "light" ? "🌙 Dark mode" : "☀️ Light mode";
+      btn.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
+    }
+
+    btn.addEventListener("click", function () {
+      var next = currentTheme() === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      window.localStorage.setItem(THEME_KEY, next);
+      render();
+    });
+
+    render();
+    return btn;
+  }
 
   function currentPage() {
     var path = window.location.pathname.split("/").pop();
@@ -65,10 +99,13 @@
       '<a href="' + ACTIONS_URL + '" target="_blank" rel="noopener">⚙️ Actions →</a>' +
       "</span>";
 
+    inner.querySelector(".site-footer-links").appendChild(buildThemeToggle());
+
     footer.appendChild(inner);
     document.body.appendChild(footer);
   }
 
+  applyStoredTheme();
   buildNav();
   buildFooter();
 })();
