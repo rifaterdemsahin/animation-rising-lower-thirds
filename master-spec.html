@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Master Spec — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>🗂️ Master Spec: Kubernetes Flow Explainer</h1>
+    <p>
+      The design/implementation spec for <a href="explainer.html">explainer.html</a>
+      and the engine generalization that made it possible. This page mirrors
+      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a>
+      on-site. It sits alongside <code>problem.md</code> (the unmodified motion/visual
+      contract for the base 2-card spring) and does not change it.
+    </p>
+
+    <div class="card-panel">
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17). Scope decided via
+      clarifying questions on 2026-07-17: new standalone page, background image
+      pre-generated as a static asset, sequential staged reveal (Cluster → Ingress
+      Gateway → Pod).</p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🎯 1. Goal</h2>
+      <p>
+        Before this spec, the repo had one shared animation engine
+        (<code>assets/js/lower-thirds.js</code>) driving two outputs, both built
+        around the same fixed "Real Jobs / Real People" two-card example:
+      </p>
+      <ul>
+        <li>🎥 <code>video-recorded.html</code> → downloadable MP4/WebM</li>
+        <li>📡 <code>video-live.html</code> → transparent live overlay (OBS/vMix)</li>
+      </ul>
+      <p>This spec adds a <strong>third output</strong> and a <strong>worked Kubernetes example</strong>:</p>
+      <ul>
+        <li>
+          🧭 <code>explainer.html</code> (new) → an interactive HTML page that uses
+          the engine to visually teach one concept — how a request flows through a
+          Kubernetes test cluster — via three staged lower-third cards, a generated
+          background, and a single Play button.
+        </li>
+      </ul>
+      <p>
+        The K8s content is the flagship demo for the new HTML output specifically.
+        The engine change that makes it possible (support for N cards, not just 2)
+        is generic and available to all three outputs.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>⚙️ 2. Engine change: generalize 2 cards → N cards</h2>
+      <p>
+        <code>lower-thirds.js</code> hardcoded <code>config.card1</code> /
+        <code>config.card2</code> in both <code>mount()</code> and
+        <code>drawCanvasFrame()</code>. <code>springState(t, delayMs)</code> already
+        took an arbitrary delay, so it already supported N cards — only the
+        renderers needed to generalize.
+      </p>
+      <p>
+        <strong>Change:</strong> accept <code>config.cards = [{icon, text, delayMs}, ...]</code>
+        (array, arbitrary length) in both renderers, laid out left-to-right in array
+        order. <code>config.card1</code>/<code>config.card2</code> keep working
+        unchanged for backward compatibility — internally normalized to
+        <code>cards: [card1, card2]</code> with <code>delayMs</code> <code>0</code> and
+        <code>STAGGER_MS</code> respectively, so <code>video-recorded.html</code> and
+        <code>video-live.html</code> needed zero changes.
+      </p>
+      <p>
+        Each card entry's <code>delayMs</code> is caller-supplied (not a fixed
+        150ms), so the explainer page can space its three stages seconds apart
+        instead of milliseconds apart. This is the only change to
+        <code>lower-thirds.js</code> — <code>STYLE</code>, <code>springState()</code>,
+        and the spring constants (ζ=0.5, ωn=11, amplitude 120px) are untouched.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🧭 3. New page: <code>explainer.html</code></h2>
+      <h3>3.1 Content — the three stages</h3>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>Card</th><th>delayMs</th><th>Caption</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>🖥️ <strong>Kubernetes Test Cluster</strong></td>
+              <td><code>0</code></td>
+              <td>"Everything below lives inside one test cluster — the boundary for all the resources in this demo."</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>🚪 <strong>Ingress Gateway</strong></td>
+              <td><code>3200</code></td>
+              <td>"External traffic enters through the Ingress Gateway, which matches incoming requests against routing rules."</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>📦 <strong>Pod</strong></td>
+              <td><code>6400</code></td>
+              <td>"The Gateway forwards the matched request to the target Pod running the application."</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Dwell timing: each card settles per <code>springState</code> (~1000ms) and
+        then holds for ~2200ms so its caption is readable before the next stage
+        fires — hence the ~3200ms spacing. Starting values to tune by eye, not a
+        hard spec. Card 1 stays visible/pinned as the persistent context label
+        while cards 2 and 3 stage in — it does not exit.
+      </p>
+
+      <h3>3.2 Flow direction (arrows)</h3>
+      <p>
+        Between stage 1→2 and stage 2→3, a directional connector (SVG line +
+        arrowhead, cyan <code>#00D2D2</code>) is drawn once both endpoint cards are
+        visible. This is DOM/SVG only, layered in <code>explainer.html</code>
+        itself — not a <code>lower-thirds.js</code> engine feature. MP4 export and
+        live overlay stay arrow-free (see §5, out of scope).
+      </p>
+
+      <h3>3.3 Interactive Play button</h3>
+      <ul>
+        <li>One ▶ Play button starts the staged sequence from t=0.</li>
+        <li>Becomes ⟳ Replay once the sequence completes.</li>
+        <li>No auto-play on load — but scriptable via <code>?autoplay=1</code>.</li>
+      </ul>
+
+      <h3>3.4 Background image</h3>
+      <ul>
+        <li>Generated once, ahead of time, and committed as a static asset — no live API calls from the page.</li>
+        <li>Generated via the <code>image-generation</code> skill (fal.ai <code>nano-banana-2</code>, fal's hosted alias for Gemini 2.5 Flash Image / "Nano Banana").</li>
+        <li>Output location: <code>assets/k8s-explainer-background.png</code>.</li>
+        <li>Used as a full-bleed background on the stage, dimmed via a CSS gradient overlay so card contrast still reads.</li>
+      </ul>
+
+      <h3>3.5 Not a form</h3>
+      <p>
+        Unlike <code>video-recorded.html</code>/<code>video-live.html</code>, this
+        page ships fixed K8s content by default — it's a worked example, not a
+        general-purpose tool (though it now also accepts URL-param overrides, see
+        <a href="explainer.html">explainer.html</a>'s own "Reusable as a URL API" panel).
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>📁 4. Files touched</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead><tr><th>File</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td><code>assets/js/lower-thirds.js</code></td><td>Generalize <code>mount()</code>/<code>drawCanvasFrame()</code> to loop over <code>config.cards[]</code>; normalize legacy <code>card1</code>/<code>card2</code> internally.</td></tr>
+            <tr><td><code>explainer.html</code></td><td>New. Stage markup, Play button, captions, SVG arrows, background image, prompt credit block.</td></tr>
+            <tr><td><code>assets/css/lower-thirds.css</code></td><td>Styles for <code>.lt-caption</code>, <code>.lt-arrow</code>, background/overlay treatment.</td></tr>
+            <tr><td><code>assets/k8s-explainer-background.png</code></td><td>New. Pre-generated background asset.</td></tr>
+            <tr><td><code>assets/js/nav.js</code></td><td>Added new pages to the shared <code>PAGES</code>/footer.</td></tr>
+            <tr><td><code>index.html</code> / <code>README.md</code></td><td>Linked the new outputs.</td></tr>
+            <tr><td><code>server/</code></td><td>New. Go/Fly.io hosted API (see <a href="mcp-guide.html">mcp-guide.html</a>).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>🚫 5. Explicitly out of scope for this pass</h2>
+      <ul>
+        <li><strong>MP4/live-overlay K8s variants</strong> — only <code>explainer.html</code> gets the K8s example, background, captions, and arrows.</li>
+        <li><strong>Live/client-side Gemini image generation</strong> — no API key input, no runtime fetch from the page.</li>
+        <li><strong>Editable/typed K8s text</strong> by default — content is fixed for the worked example (URL-param overrides added later, see <a href="explainer.html">explainer.html</a>).</li>
+      </ul>
+    </div>
+
+    <div class="card-panel">
+      <h2>📝 6–7. Open items &amp; implementation notes</h2>
+      <ul>
+        <li>Exact dwell timings (3200ms/6400ms) and icon choices are placeholders — tune by eye.</li>
+        <li>Background image generated via fal.ai <code>nano-banana-2</code>, key pulled from the <code>dp-kv-deliverypilot</code> Azure Key Vault into a git-ignored <code>.env</code> — never committed.</li>
+        <li>New public engine helpers: <code>LowerThirds.normalizeCards()</code>, <code>LowerThirds.computeDuration()</code>.</li>
+        <li>
+          Engine logic (<code>normalizeCards</code>, <code>computeDuration</code>,
+          <code>springState</code>, <code>drawCanvasFrame</code>) was verified via
+          direct in-page JS calls — full visual playback isn't observable through an
+          unfocused browser-automation tab because Chrome freezes
+          <code>requestAnimationFrame</code> there (confirmed on the pre-existing,
+          unmodified <code>video-live.html</code> too — not a regression).
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <div class="note-taker" id="note-taker">
+    <button class="note-taker-toggle" id="note-taker-toggle" type="button" aria-expanded="false">
+      📝 Notes
+    </button>
+    <div class="note-taker-panel" id="note-taker-panel" hidden>
+      <textarea id="note-taker-text" placeholder="Jot notes on this spec as you read…"></textarea>
+      <div class="note-taker-actions">
+        <button class="button" id="note-taker-copy" type="button">📋 Copy</button>
+        <button class="button secondary" id="note-taker-clear" type="button">🗑️ Clear</button>
+        <span id="note-taker-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = "lower-thirds-notes:" + window.location.pathname;
+      var toggle = document.getElementById("note-taker-toggle");
+      var panel = document.getElementById("note-taker-panel");
+      var textarea = document.getElementById("note-taker-text");
+      var copyBtn = document.getElementById("note-taker-copy");
+      var clearBtn = document.getElementById("note-taker-clear");
+      var statusEl = document.getElementById("note-taker-status");
+
+      textarea.value = window.localStorage.getItem(STORAGE_KEY) || "";
+
+      toggle.addEventListener("click", function () {
+        var expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+        panel.hidden = expanded;
+        if (!expanded) textarea.focus();
+      });
+
+      textarea.addEventListener("input", function () {
+        window.localStorage.setItem(STORAGE_KEY, textarea.value);
+      });
+
+      copyBtn.addEventListener("click", function () {
+        navigator.clipboard.writeText(textarea.value).then(function () {
+          statusEl.textContent = "Copied!";
+          setTimeout(function () { statusEl.textContent = ""; }, 1500);
+        }, function () {
+          statusEl.textContent = "Copy failed — select and copy manually.";
+        });
+      });
+
+      clearBtn.addEventListener("click", function () {
+        textarea.value = "";
+        window.localStorage.removeItem(STORAGE_KEY);
+        textarea.focus();
+      });
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

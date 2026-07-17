@@ -60,6 +60,7 @@
     inner.innerHTML =
       "<span>🎬 Animation Helper for Rising Lower Thirds</span>" +
       '<span class="site-footer-links">' +
+      '<a href="master-spec.html">🗂️ Master Spec</a>' +
       '<a href="' + GITHUB_URL + '" target="_blank" rel="noopener">📦 View project on GitHub →</a>' +
       '<a href="' + ACTIONS_URL + '" target="_blank" rel="noopener">⚙️ Actions →</a>' +
       "</span>";
