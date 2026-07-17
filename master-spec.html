@@ -23,15 +23,16 @@
     </p>
 
     <div class="card-panel">
-      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended twice
-      (2026-07-18, see §8–10 below). Scope decided via clarifying questions on
-      2026-07-17: new standalone page, background image pre-generated as a
-      static asset, sequential staged reveal (Cluster → Ingress Gateway → Pod).
-      Extended 2026-07-18: the Kubernetes example became the shared default
-      content across <strong>all three outputs</strong> (§8), a full project
-      reference was added (§9), and the background was replaced with a
-      content-matched version plus a standing content-matching rule and a
-      Fly.io deploy reminder (§10).</p>
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended three
+      times (2026-07-18, see §8–11 below). Scope decided via clarifying
+      questions on 2026-07-17: new standalone page, background image
+      pre-generated as a static asset, sequential staged reveal (Cluster →
+      Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes example
+      became the shared default content across <strong>all three outputs</strong>
+      (§8), a full project reference was added (§9), the background was
+      replaced with a content-matched version plus standing rules (§10), and a
+      live-API 404 bug at the bare root URL was fixed with a regression test
+      added (§11).</p>
     </div>
 
     <div class="card-panel">
@@ -358,6 +359,32 @@
         assume everything shipped, when the live API at
         <a href="https://lower-thirds-api.fly.dev" target="_blank" rel="noopener">lower-thirds-api.fly.dev</a>
         is still running the old binary.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🐛 11. Addendum (2026-07-18, later still): fixed the bare API URL 404ing</h2>
+      <p>
+        <code>https://lower-thirds-api.fly.dev/</code> (no path) returned a bare
+        <code>net/http</code> 404 — the server only ever registered
+        <code>/healthz</code> and <code>/render</code> on its
+        <code>ServeMux</code>, so the root path had no handler. Fixed in
+        <code>server/main.go</code>: a <code>rootHandler()</code> registered on
+        <code>/</code> now answers the exact root path with a small JSON
+        service description (endpoints + docs links); every other unmatched
+        path still 404s normally, since a <code>"/"</code> pattern on
+        <code>ServeMux</code> only acts as a catch-all for paths nothing more
+        specific matches.
+      </p>
+      <p>
+        Also added a regression test: <code>tests/test_pages.py</code> now
+        makes a real network call to the live API (<code>GET /</code> and
+        <code>GET /healthz</code>, expecting <code>200</code> on both) in
+        addition to its existing local-static-site checks — this is the only
+        part of the test suite that depends on external, deployed state rather
+        than the local checkout, deliberately, so a 404-on-deploy class of bug
+        like this one gets caught by CI going forward instead of only by a
+        user noticing.
       </p>
     </div>
   </main>

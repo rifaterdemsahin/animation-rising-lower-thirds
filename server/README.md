@@ -19,13 +19,17 @@ yourself if you have Key Vault / Fly access.
 
 ## 📡 Endpoints
 
+- `GET /` — `200`, JSON service description (endpoints + docs links), no auth
+  required. Exists so the bare API URL doesn't 404 — every other unmatched
+  path still does.
 - `GET /healthz` — `200 ok`, no auth required.
 - `POST /render` — body:
   ```json
-  { "icon1": "💼", "text1": "Real Jobs", "icon2": "👤", "text2": "Real People" }
+  { "icon1": "🖥️", "text1": "Kubernetes Test Cluster", "icon2": "🚪", "text2": "Ingress Gateway" }
   ```
   Returns `video/webm` bytes on success (200), or a JSON-free plain-text error
-  (400/401/500).
+  (400/401/500). 2-card only for now — see `MASTER_SPEC.md` §8.4 for the
+  known gap against the page's current 3-card default.
 
 Example:
 
@@ -33,7 +37,7 @@ Example:
 curl -X POST https://lower-thirds-api.fly.dev/render \
   -H "Authorization: Bearer $API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}' \
+  -d '{"icon1":"🖥️","text1":"Kubernetes Test Cluster","icon2":"🚪","text2":"Ingress Gateway"}' \
   -o lower-thirds.webm
 ```
 

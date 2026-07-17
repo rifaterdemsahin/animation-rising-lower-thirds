@@ -4,7 +4,11 @@ Smoke-tests every page in this static site: serves the repo locally,
 requests each page, and checks it responds 200 with the expected title
 and a couple of page-specific must-have markers. Also checks that every
 local asset (css/js/png referenced by <link>/<script>/<img> src=) actually
-resolves, to catch broken paths after a rename/move.
+resolves, to catch broken paths after a rename/move. Finally, hits the live
+hosted Go API (server/, deployed to Fly.io) at a couple of known-good
+endpoints — this is a real network call, not a local server, so it also
+catches deploy regressions (e.g. the root path 404ing) that only show up
+once the API is live, not just in local review.
 
 No dependencies beyond the stdlib, matching this repo's "no build step"
 convention (see CLAUDE.md) — run with: python3 tests/test_pages.py
@@ -31,6 +35,16 @@ PAGES = [
     ("mcp-guide.html", ["<title>API Guide", "lower-thirds-api.fly.dev", "render_lower_third"]),
     ("recommendation.html", ["<title>Recommendations", "ffmpeg-usage"]),
     ("master-spec.html", ["<title>Master Spec", 'id="note-taker"']),
+]
+
+# Live checks against the hosted Go API (see server/), not the local static
+# site — catches regressions like a route returning 404 that only show up
+# once deployed. Real network call, generous timeout since Fly.io machines
+# auto-stop when idle and need a moment to cold-start on the first request.
+API_BASE = "https://lower-thirds-api.fly.dev"
+API_ENDPOINTS = [
+    ("/", 200),
+    ("/healthz", 200),
 ]
 
 ASSET_TAGS = {"link": "href", "script": "src", "img": "src"}
@@ -79,9 +93,14 @@ def start_server(port):
     return httpd
 
 
-def fetch(url):
-    with urllib.request.urlopen(url, timeout=10) as resp:
-        return resp.status, resp.read().decode("utf-8", errors="replace")
+def fetch(url, timeout=10):
+    """GET url, returning (status, body) for any HTTP response — including
+    4xx/5xx, which urlopen otherwise raises as HTTPError instead of returning."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            return resp.status, resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read().decode("utf-8", errors="replace")
 
 
 def local_assets(html):
@@ -135,6 +154,19 @@ def main():
         httpd.shutdown()
 
     print(f"\nChecked {len(PAGES)} pages and {len(checked_assets)} local assets.")
+
+    print(f"\nChecking live API at {API_BASE} ...")
+    for endpoint, expected_status in API_ENDPOINTS:
+        url = f"{API_BASE}{endpoint}"
+        try:
+            status, _ = fetch(url, timeout=20)
+        except urllib.error.URLError as exc:
+            failures.append(f"{API_BASE}{endpoint}: request failed ({exc})")
+            continue
+        if status != expected_status:
+            failures.append(f"{API_BASE}{endpoint}: expected HTTP {expected_status}, got {status}")
+            continue
+        print(f"✅ {endpoint} -> {status}")
 
     if failures:
         print(f"\n❌ {len(failures)} failure(s):")

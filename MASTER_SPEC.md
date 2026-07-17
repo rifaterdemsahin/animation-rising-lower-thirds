@@ -1,12 +1,13 @@
 # Master Spec: Kubernetes Flow Explainer (3rd output + engine generalization)
 
-Status: **implemented** (2026-07-17), **extended twice** (2026-07-18, see §8-10).
-Scope decided via clarifying questions on 2026-07-17: new standalone page,
-background image pre-generated as a static asset, sequential staged reveal
-(Cluster → Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes example
-became the shared default content across all three outputs (§8), a full project
-reference was added (§9), and the background was replaced with a content-matched
-version plus a standing content-matching rule and a Fly.io deploy reminder (§10).
+Status: **implemented** (2026-07-17), **extended three times** (2026-07-18, see
+§8-11). Scope decided via clarifying questions on 2026-07-17: new standalone
+page, background image pre-generated as a static asset, sequential staged
+reveal (Cluster → Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes
+example became the shared default content across all three outputs (§8), a
+full project reference was added (§9), the background was replaced with a
+content-matched version plus standing rules (§10), and a live-API 404 bug at
+the bare root URL was fixed with a regression test added (§11).
 
 This spec sits alongside `problem.md` (which remains the unmodified motion/visual
 contract for the base 2-card "Elastic Rise" spring) and extends the toolbox described
@@ -370,3 +371,22 @@ run by hand. It's easy to commit a `server/` change, push, and assume everything
 shipped, when the live API at
 [lower-thirds-api.fly.dev](https://lower-thirds-api.fly.dev) is still running
 the old binary.
+
+---
+
+## 11. Addendum (2026-07-18, later still): fixed the bare API URL 404ing
+
+`https://lower-thirds-api.fly.dev/` (no path) returned a bare `net/http` 404 —
+the server only ever registered `/healthz` and `/render` on its `ServeMux`, so
+the root path had no handler. Fixed in `server/main.go`: a `rootHandler()`
+registered on `/` now answers the exact root path with a small JSON service
+description (endpoints + docs links); every other unmatched path still 404s
+normally, since a `"/"` pattern on `ServeMux` only acts as a catch-all for
+paths nothing more specific matches.
+
+Also added a regression test: `tests/test_pages.py` now makes a real network
+call to the live API (`GET /` and `GET /healthz`, expecting `200` on both) in
+addition to its existing local-static-site checks — this is the only part of
+the test suite that depends on external, deployed state rather than the local
+checkout, deliberately, so a 404-on-deploy class of bug like this one gets
+caught by CI going forward instead of only by a user noticing.

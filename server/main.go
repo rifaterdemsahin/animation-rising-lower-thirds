@@ -43,6 +43,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", rootHandler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
@@ -51,6 +52,31 @@ func main() {
 
 	log.Printf("listening on :%s (site base %s)", port, siteBase)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
+}
+
+// rootHandler answers the bare API URL with a small description of the
+// service instead of the net/http default 404 — "/" registered on a
+// ServeMux acts as a catch-all for any path not matched by a more specific
+// pattern (like "/healthz"/"/render"), so this only special-cases the exact
+// root path and still returns a real 404 for anything else unmatched.
+func rootHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"service": "lower-thirds-api",
+			"endpoints": map[string]string{
+				"GET /healthz": "health check, no auth",
+				"POST /render": "render a lower-thirds video; Authorization: Bearer $API_TOKEN required",
+			},
+			"docs": "https://rifaterdemsahin.github.io/animation-rising-lower-thirds/mcp-guide.html",
+			"repo": "https://github.com/rifaterdemsahin/animation-rising-lower-thirds",
+		})
+	}
 }
 
 func renderHandler(token, siteBase string) http.HandlerFunc {
