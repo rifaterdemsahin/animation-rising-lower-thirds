@@ -6,13 +6,16 @@
   "use strict";
 
   var PAGES = [
-    { href: "index.html", label: "Home" },
-    { href: "video-recorded.html", label: "Recorded Video" },
-    { href: "video-live.html", label: "Live Overlay" },
-    { href: "recommendation.html", label: "Recommendations" },
+    { href: "index.html", label: "🏠 Home" },
+    { href: "video-recorded.html", label: "🎥 Recorded Video" },
+    { href: "video-live.html", label: "📡 Live Overlay" },
+    { href: "explainer.html", label: "🧭 Explainer" },
+    { href: "mcp-guide.html", label: "📖 API Guide" },
+    { href: "recommendation.html", label: "💡 Recommendations" },
   ];
 
   var GITHUB_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds";
+  var ACTIONS_URL = "https://github.com/rifaterdemsahin/animation-rising-lower-thirds/actions";
 
   function currentPage() {
     var path = window.location.pathname.split("/").pop();
@@ -55,8 +58,11 @@
     var inner = document.createElement("div");
     inner.className = "site-footer-inner";
     inner.innerHTML =
-      "<span>Animation Helper for Rising Lower Thirds</span>" +
-      '<a href="' + GITHUB_URL + '" target="_blank" rel="noopener">View project on GitHub →</a>';
+      "<span>🎬 Animation Helper for Rising Lower Thirds</span>" +
+      '<span class="site-footer-links">' +
+      '<a href="' + GITHUB_URL + '" target="_blank" rel="noopener">📦 View project on GitHub →</a>' +
+      '<a href="' + ACTIONS_URL + '" target="_blank" rel="noopener">⚙️ Actions →</a>' +
+      "</span>";
 
     footer.appendChild(inner);
     document.body.appendChild(footer);

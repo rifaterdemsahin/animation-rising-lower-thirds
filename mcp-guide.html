@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Guide — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>📖 How to Use This Project Over an API</h1>
+    <p>
+      Three ways to drive this toolbox without clicking through the UI, from
+      "no new code" to "a hosted HTTP API you can call from anywhere." Full
+      detail lives in
+      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a> —
+      this page mirrors it on-site.
+    </p>
+
+    <div class="card-panel">
+      <h2>🖱️ Option 1 — browser automation, no new code</h2>
+      <p>
+        If your MCP client already has browser tools (e.g. <code>claude-in-chrome</code>'s
+        <code>navigate</code> / <code>computer</code> / <code>javascript_tool</code>),
+        you already have everything needed:
+      </p>
+      <ol>
+        <li>
+          <code>navigate</code> to
+          <code>video-recorded.html?icon1=💼&amp;text1=Real+Jobs&amp;icon2=👤&amp;text2=Real+People&amp;autorecord=1</code>.
+        </li>
+        <li>Poll for <code>document.getElementById("status").textContent === "Recording ready."</code>.</li>
+        <li>Read <code>document.getElementById("download-link").href</code> (a <code>blob:</code> URL).</li>
+      </ol>
+    </div>
+
+    <div class="card-panel">
+      <h2>🧩 Option 2 — build your own MCP server</h2>
+      <p>
+        Wrap a headless browser (Node + Puppeteer, or any language) around the
+        same URL API. Full sketch in
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>.
+        Useful if you're already building an MCP server and want
+        <code>render_lower_third</code> as one of its tools.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🚀 Option 3 — the hosted API (live now)</h2>
+      <p>
+        Option 2's approach, already built in Go and deployed to
+        <a href="https://fly.io" target="_blank" rel="noopener">Fly.io</a> — no
+        server to stand up yourself. Source: <code>server/main.go</code>
+        (<a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/tree/main/server">server/</a>
+        in this repo). It drives headless Chrome
+        (<a href="https://github.com/chromedp/chromedp" target="_blank" rel="noopener">chromedp</a>)
+        against <code>video-recorded.html?...&amp;autorecord=1</code> — the exact
+        same engine and URL API as Options 1 and 2, just hosted.
+      </p>
+      <p><strong>Base URL:</strong> <code>https://lower-thirds-api.fly.dev</code></p>
+      <ul>
+        <li><code>GET /healthz</code> — no auth, returns <code>200 ok</code>.</li>
+        <li>
+          <code>POST /render</code> — requires <code>Authorization: Bearer $API_TOKEN</code>;
+          JSON body <code>{icon1, text1, icon2, text2}</code>; response body is
+          <code>video/webm</code> bytes.
+        </li>
+      </ul>
+      <pre>curl -X POST https://lower-thirds-api.fly.dev/render \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}' \
+  -o lower-thirds.webm</pre>
+      <p>
+        <code>$API_TOKEN</code> is a Fly.io secret, never committed — see
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/server/README.md">server/README.md</a>
+        for how to get or rotate it.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤔 Which to use</h2>
+      <ul>
+        <li>Prototyping, one-off generation, or you already have a browser-automation MCP server → <strong>Option 1</strong>.</li>
+        <li>Building your own MCP server / embedding this in another toolchain → <strong>Option 2</strong>.</li>
+        <li>Just need a video back from an HTTP call, right now → <strong>Option 3</strong>.</li>
+      </ul>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

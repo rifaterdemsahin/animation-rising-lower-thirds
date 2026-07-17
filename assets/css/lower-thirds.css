@@ -49,3 +49,62 @@
   font-size: 26px;
   line-height: 1;
 }
+
+/* Explainer page (explainer.html) — generated background + flow arrows + captions */
+
+.lt-stage.lt-explainer-bg {
+  position: relative;
+  background-image: linear-gradient(180deg, rgba(6, 16, 15, 0.35) 0%, rgba(6, 16, 15, 0.92) 78%), url("../k8s-explainer-background.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.lt-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lt-arrow {
+  stroke: #00d2d2;
+  stroke-width: 3;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.lt-caption-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lt-caption {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.lt-caption.lt-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lt-caption-index {
+  flex: none;
+  color: #00d2d2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+}
+
+.lt-caption-text {
+  color: #f2f7f7;
+  line-height: 1.5;
+}

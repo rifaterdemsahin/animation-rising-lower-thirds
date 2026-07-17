@@ -182,3 +182,9 @@ input[type="text"] {
 .site-footer-inner a:hover {
   color: var(--accent);
 }
+
+.site-footer-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}

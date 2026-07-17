@@ -63,6 +63,28 @@
     return div.innerHTML;
   }
 
+  /**
+   * Normalizes a config into a flat array of cards, each with a delayMs.
+   * Accepts either the legacy { card1, card2 } shape (delays 0 / STAGGER_MS)
+   * or an explicit { cards: [{icon, text, delayMs}, ...] } for N cards with
+   * caller-supplied timing (e.g. a multi-stage explainer).
+   */
+  function normalizeCards(config) {
+    if (config.cards) return config.cards;
+    return [
+      Object.assign({ delayMs: 0 }, config.card1),
+      Object.assign({ delayMs: STAGGER_MS }, config.card2),
+    ];
+  }
+
+  /**
+   * Time (ms) until every card in `cards` has fully settled.
+   */
+  function computeDuration(cards) {
+    const maxDelay = cards.reduce((max, c) => Math.max(max, c.delayMs || 0), 0);
+    return maxDelay + SETTLE_MS + 200;
+  }
+
   // ---------------------------------------------------------------------
   // DOM / CSS renderer — used for the live overlay (video-live.html)
   // ---------------------------------------------------------------------
@@ -77,33 +99,36 @@
   }
 
   /**
-   * Mounts two lower-third cards into `container` and animates them in.
-   * config: { card1: {icon, text}, card2: {icon, text} }
+   * Mounts lower-third cards into `container` and animates them in.
+   * config: { card1: {icon, text}, card2: {icon, text} } (legacy 2-card shape)
+   *      or { cards: [{icon, text, delayMs}, ...] } (N cards, custom timing)
    * Returns a controller: { stop(), replay() }
    */
   function mount(container, config) {
     container.innerHTML = "";
     const wrap = document.createElement("div");
     wrap.className = "lt-wrap";
-    const el1 = buildCardElement(config.card1);
-    const el2 = buildCardElement(config.card2);
-    wrap.appendChild(el1);
-    wrap.appendChild(el2);
+    const cards = normalizeCards(config);
+    const elements = cards.map(function (card) {
+      const el = buildCardElement(card);
+      wrap.appendChild(el);
+      return el;
+    });
     container.appendChild(wrap);
 
+    const duration = computeDuration(cards);
     let rafId = null;
     let start = null;
 
     function frame(now) {
       if (start === null) start = now;
       const t = now - start;
-      const s1 = springState(t, 0);
-      const s2 = springState(t, STAGGER_MS);
-      el1.style.transform = "translateY(" + s1.y + "px)";
-      el1.style.opacity = String(s1.opacity);
-      el2.style.transform = "translateY(" + s2.y + "px)";
-      el2.style.opacity = String(s2.opacity);
-      if (t < DURATION_MS) {
+      cards.forEach(function (card, i) {
+        const s = springState(t, card.delayMs || 0);
+        elements[i].style.transform = "translateY(" + s.y + "px)";
+        elements[i].style.opacity = String(s.opacity);
+      });
+      if (t < duration) {
         rafId = requestAnimationFrame(frame);
       }
     }
@@ -171,23 +196,24 @@
   }
 
   /**
-   * Draws one frame of the two-card animation at time t (ms) onto a canvas.
-   * `restY` is the resting baseline (bottom) Y coordinate for both cards.
+   * Draws one frame of the card animation at time t (ms) onto a canvas.
+   * `restY` is the resting baseline (bottom) Y coordinate for all cards.
+   * Accepts the same { card1, card2 } / { cards: [...] } config shapes as mount().
    */
   function drawCanvasFrame(ctx, width, height, t, config, restY) {
     ctx.clearRect(0, 0, width, height);
 
-    const dims1 = measureCard(ctx, config.card1);
-    const dims2 = measureCard(ctx, config.card2);
-    const totalWidth = dims1.width + STYLE.gap + dims2.width;
-    const startX = (width - totalWidth) / 2;
+    const cards = normalizeCards(config);
+    const dims = cards.map(function (card) { return measureCard(ctx, card); });
+    const totalWidth = dims.reduce(function (sum, d) { return sum + d.width; }, 0) + STYLE.gap * (cards.length - 1);
     const baseline = restY !== undefined ? restY : height - 160;
 
-    const s1 = springState(t, 0);
-    const s2 = springState(t, STAGGER_MS);
-
-    drawCard(ctx, startX, baseline - dims1.height + s1.y, dims1, config.card1, s1.opacity);
-    drawCard(ctx, startX + dims1.width + STYLE.gap, baseline - dims2.height + s2.y, dims2, config.card2, s2.opacity);
+    let x = (width - totalWidth) / 2;
+    cards.forEach(function (card, i) {
+      const s = springState(t, card.delayMs || 0);
+      drawCard(ctx, x, baseline - dims[i].height + s.y, dims[i], card, s.opacity);
+      x += dims[i].width + STYLE.gap;
+    });
   }
 
   global.LowerThirds = {
@@ -195,6 +221,8 @@
     STAGGER_MS: STAGGER_MS,
     DURATION_MS: DURATION_MS,
     springState: springState,
+    computeDuration: computeDuration,
+    normalizeCards: normalizeCards,
     mount: mount,
     drawCanvasFrame: drawCanvasFrame,
   };

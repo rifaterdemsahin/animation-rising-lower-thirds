@@ -1,4 +1,4 @@
-# MCP Guide
+# 📖 MCP Guide
 
 How to drive this toolbox from an MCP (Model Context Protocol) client/agent,
 instead of clicking through the UI.
@@ -87,10 +87,38 @@ Point any MCP client at this server and `render_lower_third` becomes a normal
 callable tool — same underlying URL API, just wrapped so no browser-automation
 MCP server is required on the client side.
 
+## 🚀 Option 3 — the hosted API (already built and deployed)
+
+Option 2's sketch, but actually built (in Go, not Node) and running at
+**https://lower-thirds-api.fly.dev** — no server to stand up yourself. Source
+is in [`server/`](server/) (`server/main.go`), deployed to
+[Fly.io](https://fly.io) via `server/Dockerfile` + `server/fly.toml`.
+
+```bash
+curl -X POST https://lower-thirds-api.fly.dev/render \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}' \
+  -o lower-thirds.webm
+```
+
+- `GET /healthz` — no auth, `200 ok`.
+- `POST /render` — `Authorization: Bearer <API_TOKEN>` required; body is
+  `{icon1, text1, icon2, text2}`; response body is `video/webm` bytes.
+- The token is a Fly.io secret, never committed — see `server/README.md` for
+  how to get/rotate it.
+
+Internally this is exactly Option 2's approach (headless Chrome driving
+`video-recorded.html?...&autorecord=1`), via
+[`chromedp`](https://github.com/chromedp/chromedp) instead of Puppeteer, so it
+inherits the same "one shared engine" guarantee — nothing about the animation
+itself is reimplemented server-side.
+
 ## Which to use
 
 - Prototyping, one-off generation, or you already have a browser-automation
   MCP server connected → **Option 1**, nothing to build.
-- Repeatable automation from a client that has no browser tools of its own
-  (e.g. wiring this into a pipeline) → **Option 2**, build the small server
-  above once and reuse it.
+- Building your own MCP server / embedding this in another Node toolchain →
+  **Option 2**, the Puppeteer sketch.
+- Just need a video back from an HTTP call, right now, no server to run →
+  **Option 3**, the hosted API.

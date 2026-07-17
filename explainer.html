@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explainer: Kubernetes Request Flow — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/lower-thirds.css">
+</head>
+<body>
+  <main>
+    <h1>🧭 How a Request Reaches a Pod</h1>
+    <p>
+      A worked example of the same rising-card engine used as a teaching tool: three
+      cards stage in one at a time — <strong>Kubernetes Test Cluster</strong>,
+      <strong>Ingress Gateway</strong>, <strong>Pod</strong> — each timed a few
+      seconds apart so there's room to read what it means before the next one rises.
+      Press Play to run it.
+    </p>
+
+    <div class="card-panel">
+      <div class="lt-stage lt-explainer-bg" id="stage">
+        <svg class="lt-arrows" id="arrows-svg">
+          <defs>
+            <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#00d2d2"></path>
+            </marker>
+          </defs>
+          <line id="arrow-1-2" class="lt-arrow" x1="0" y1="0" x2="0" y2="0" marker-end="url(#arrowhead)"></line>
+          <line id="arrow-2-3" class="lt-arrow" x1="0" y1="0" x2="0" y2="0" marker-end="url(#arrowhead)"></line>
+        </svg>
+        <div id="cards-mount"></div>
+      </div>
+      <button class="button" id="play-btn" type="button">▶ Play</button>
+
+      <ol class="lt-caption-list" id="caption-list">
+        <li class="lt-caption" id="caption-1">
+          <span class="lt-caption-index">1.</span>
+          <span class="lt-caption-text" id="caption-1-text"></span>
+        </li>
+        <li class="lt-caption" id="caption-2">
+          <span class="lt-caption-index">2.</span>
+          <span class="lt-caption-text" id="caption-2-text"></span>
+        </li>
+        <li class="lt-caption" id="caption-3">
+          <span class="lt-caption-index">3.</span>
+          <span class="lt-caption-text" id="caption-3-text"></span>
+        </li>
+      </ol>
+    </div>
+
+    <div class="card-panel">
+      <h2>🖼️ Background image credit</h2>
+      <p>
+        Generated ahead of time via this repo's <code>image-generation</code> skill
+        (fal.ai, <code>nano-banana-2</code> — fal's hosted alias for Google's Gemini
+        2.5 Flash Image model), and committed as a static asset at
+        <code>assets/k8s-explainer-background.png</code>. No live API calls happen on
+        this page — the <code>bgprompt</code> param below only changes what's
+        <em>displayed</em> here, so you can copy a new prompt to regenerate the image
+        offline; it does not re-render the background live.
+      </p>
+      <pre id="bg-prompt">A cinematic, dark navy-teal technical illustration of a Kubernetes cluster architecture: a subtle grid of server racks and container nodes glowing faintly, an abstract network topology with faint cyan connection lines suggesting traffic entering through a gateway and reaching workload nodes. Wide 16:9, moody and minimal like a live-stream tech-talk background. Plenty of dark negative space in the lower two-thirds of the frame for text/card overlays. No readable text, no logos, no UI chrome in the image itself. Dark charcoal (#0B1B1E) base tones with cyan (#00D2D2) accent glow. High resolution, professional broadcast-graphics style.
+
+Save to: assets/k8s-explainer-background.png</pre>
+    </div>
+
+    <div class="card-panel">
+      <h2>🔗 Reusable as a URL API</h2>
+      <p>
+        Skip the defaults: override each stage's icon/text, and/or the displayed
+        background prompt, via query params — add <code>&amp;autoplay=1</code> to
+        run the sequence immediately on load.
+      </p>
+      <pre id="url-example"></pre>
+    </div>
+  </main>
+
+  <script src="assets/js/lower-thirds.js"></script>
+  <script>
+    (function () {
+      var DEFAULT_CARDS = [
+        { icon: "🖥️", text: "Kubernetes Test Cluster", delayMs: 0 },
+        { icon: "🚪", text: "Ingress Gateway", delayMs: 3200 },
+        { icon: "📦", text: "Pod", delayMs: 6400 },
+      ];
+      var DEFAULT_CAPTIONS = [
+        "Everything below lives inside one test cluster — the boundary for all the resources in this demo.",
+        "External traffic enters through the Ingress Gateway, which matches incoming requests against routing rules.",
+        "The Gateway forwards the matched request to the target Pod running the application.",
+      ];
+
+      var params = new URLSearchParams(window.location.search);
+      var hasCardOverride = ["text1", "text2", "text3", "emoji1", "emoji2", "emoji3"].some(function (key) {
+        return params.has(key);
+      });
+
+      var STAGE_CONFIG = {
+        cards: DEFAULT_CARDS.map(function (card, i) {
+          var n = i + 1;
+          return {
+            icon: params.get("emoji" + n) || card.icon,
+            text: params.get("text" + n) || card.text,
+            delayMs: card.delayMs,
+          };
+        }),
+      };
+
+      var CAPTIONS = DEFAULT_CAPTIONS.map(function (text, i) {
+        if (!hasCardOverride) return text;
+        var card = STAGE_CONFIG.cards[i];
+        return card.icon + " " + card.text;
+      });
+      CAPTIONS.forEach(function (text, i) {
+        document.getElementById("caption-" + (i + 1) + "-text").textContent = text;
+      });
+
+      if (params.has("bgprompt")) {
+        document.getElementById("bg-prompt").textContent = params.get("bgprompt") +
+          "\n\nSave to: assets/k8s-explainer-background.png";
+      }
+
+      var stage = document.getElementById("stage");
+      var cardsMount = document.getElementById("cards-mount");
+      var playBtn = document.getElementById("play-btn");
+      var timers = [];
+      var controller = null;
+
+      function clearTimers() {
+        timers.forEach(function (id) { clearTimeout(id); });
+        timers = [];
+      }
+
+      function resetCaptionsAndArrows() {
+        document.querySelectorAll(".lt-caption").forEach(function (el) {
+          el.classList.remove("lt-visible");
+        });
+        document.querySelectorAll(".lt-arrow").forEach(function (el) {
+          el.style.opacity = 0;
+        });
+      }
+
+      function revealArrow(lineId, fromIndex, toIndex) {
+        var cardEls = cardsMount.querySelectorAll(".lt-card");
+        var fromEl = cardEls[fromIndex];
+        var toEl = cardEls[toIndex];
+        var line = document.getElementById(lineId);
+        if (!fromEl || !toEl || !line) return;
+        var stageRect = stage.getBoundingClientRect();
+        var fromRect = fromEl.getBoundingClientRect();
+        var toRect = toEl.getBoundingClientRect();
+        var y = fromRect.top + fromRect.height / 2 - stageRect.top;
+        line.setAttribute("x1", fromRect.right - stageRect.left);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", toRect.left - stageRect.left);
+        line.setAttribute("y2", y);
+        line.style.opacity = 1;
+      }
+
+      function playSequence() {
+        clearTimers();
+        resetCaptionsAndArrows();
+        if (controller) controller.stop();
+        controller = LowerThirds.mount(cardsMount, STAGE_CONFIG);
+
+        playBtn.disabled = true;
+        playBtn.textContent = "▶ Playing…";
+
+        STAGE_CONFIG.cards.forEach(function (card, i) {
+          var t = setTimeout(function () {
+            var caption = document.getElementById("caption-" + (i + 1));
+            if (caption) caption.classList.add("lt-visible");
+          }, card.delayMs + 200);
+          timers.push(t);
+        });
+
+        timers.push(setTimeout(function () { revealArrow("arrow-1-2", 0, 1); }, STAGE_CONFIG.cards[1].delayMs + 1000));
+        timers.push(setTimeout(function () { revealArrow("arrow-2-3", 1, 2); }, STAGE_CONFIG.cards[2].delayMs + 1000));
+
+        var totalDuration = LowerThirds.computeDuration(STAGE_CONFIG.cards) + 1200;
+        timers.push(setTimeout(function () {
+          playBtn.disabled = false;
+          playBtn.textContent = "⟳ Replay";
+        }, totalDuration));
+      }
+
+      playBtn.addEventListener("click", playSequence);
+
+      var exampleUrl = new URL(window.location.href);
+      exampleUrl.search = "";
+      exampleUrl.searchParams.set("emoji1", "🖥️");
+      exampleUrl.searchParams.set("text1", "Kubernetes Test Cluster");
+      exampleUrl.searchParams.set("emoji2", "🚪");
+      exampleUrl.searchParams.set("text2", "Ingress Gateway");
+      exampleUrl.searchParams.set("emoji3", "📦");
+      exampleUrl.searchParams.set("text3", "Pod");
+      exampleUrl.searchParams.set("autoplay", "1");
+      document.getElementById("url-example").textContent = exampleUrl.toString();
+
+      if (params.get("autoplay") === "1") {
+        playSequence();
+      }
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>
