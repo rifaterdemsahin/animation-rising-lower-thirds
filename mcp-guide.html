@@ -80,6 +80,45 @@
     </div>
 
     <div class="card-panel">
+      <h2>🗣️ Prompts to give an AI agent</h2>
+      <p>
+        If you're asking Claude (or any AI agent) to actually consume this
+        project rather than reading about it, here's copy-pasteable phrasing
+        for each option above.
+      </p>
+
+      <h3>🖱️ For Option 1 (an agent with browser tools)</h3>
+      <pre>Using your browser tools, navigate to
+https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html?icon1=💼&text1=Real+Jobs&icon2=👤&text2=Real+People&autorecord=1
+Wait until the on-page status reads "Recording ready.", then read the
+download-link element's href and give me the video.</pre>
+
+      <h3>🧭 For the Kubernetes explainer (Option 1, staged content)</h3>
+      <pre>Using your browser tools, navigate to
+https://rifaterdemsahin.github.io/animation-rising-lower-thirds/explainer.html?text1=API+Gateway&emoji1=🚪&text2=Auth+Service&emoji2=🔐&text3=Database&emoji3=🗄️&autoplay=1
+and describe what happens on screen as each stage rises.</pre>
+
+      <h3>🧩 For Option 2 (an agent building its own MCP server)</h3>
+      <pre>Build me an MCP server with a render_lower_third(icon1, text1, icon2, text2)
+tool that returns a video/webm file. Drive it by opening
+https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html
+with those params + &autorecord=1 in a headless browser, waiting for
+"Recording ready.", then fetching the download-link blob as base64.
+See MCP_GUIDE.md "Option 2" in the animation-rising-lower-thirds repo
+for a working Puppeteer sketch.</pre>
+
+      <h3>🚀 For Option 3 (an agent with HTTP/curl access — no browser needed)</h3>
+      <pre>Call this API to render a lower-thirds video, then save the result:
+
+POST https://lower-thirds-api.fly.dev/render
+Headers: Authorization: Bearer $API_TOKEN, Content-Type: application/json
+Body: {"icon1":"💼","text1":"Real Jobs","icon2":"👤","text2":"Real People"}
+
+The response body is the raw video/webm file — write it to lower-thirds.webm.
+($API_TOKEN is a secret; ask the repo owner or see server/README.md.)</pre>
+    </div>
+
+    <div class="card-panel">
       <h2>🤔 Which to use</h2>
       <ul>
         <li>Prototyping, one-off generation, or you already have a browser-automation MCP server → <strong>Option 1</strong>.</li>

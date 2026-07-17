@@ -10,13 +10,21 @@ damped-oscillation bounce, staggered in time card-to-card. The full motion/visua
 spec (dimensions, colors, timing, the math) is in `problem.md` — read it before
 touching animation timing or styling.
 
-The site itself has no build step, package manager, or test suite. It's plain
-HTML/CSS/JS deployed as-is to GitHub Pages via `.github/workflows/static.yml`,
-which uploads the entire repo on every push to `main`. To preview locally, just
-open the HTML files directly in a browser (or serve the directory with any static
+The site itself has no build step or package manager. It's plain HTML/CSS/JS
+deployed as-is to GitHub Pages via `.github/workflows/static.yml`, which
+uploads the entire repo on every push to `main`. To preview locally, just open
+the HTML files directly in a browser (or serve the directory with any static
 file server). A separate, optional Go API server (`server/`, see §"Hosted API")
 is deployed independently to Fly.io — it does not affect the static site's
 build-free deployment.
+
+There is a lightweight smoke-test suite, `tests/test_pages.py` (stdlib-only
+Python, no dependencies to install) — it serves the repo locally and checks
+every page returns 200, contains a few expected markers, and that every local
+asset it references actually resolves. Run it with `python3 tests/test_pages.py`;
+it also runs in CI via `.github/workflows/test-pages.yml` on every push/PR.
+Add new pages to the `PAGES` list in that script when you add them to
+`assets/js/nav.js`.
 
 ## Architecture
 
