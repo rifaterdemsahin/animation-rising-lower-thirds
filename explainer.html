@@ -58,15 +58,51 @@
     <div class="card-panel">
       <h2>🖼️ Background image credit</h2>
       <p>
-        Generated ahead of time via this repo's <code>image-generation</code> skill
-        (fal.ai, <code>nano-banana-2</code> — fal's hosted alias for Google's Gemini
-        2.5 Flash Image model), and committed as a static asset at
+        Generated ahead of time (via this repo's <code>image-generation</code> skill,
+        fal.ai <code>nano-banana-2</code>) and committed as a static asset at
         <code>assets/k8s-explainer-background.png</code>. No live API calls happen on
         this page — the <code>bgprompt</code> param below only changes what's
         <em>displayed</em> here, so you can copy a new prompt to regenerate the image
         offline; it does not re-render the background live.
       </p>
-      <pre id="bg-prompt">A cinematic, dark navy-teal technical illustration of a Kubernetes cluster architecture: a subtle grid of server racks and container nodes glowing faintly, an abstract network topology with faint cyan connection lines suggesting traffic entering through a gateway and reaching workload nodes. Wide 16:9, moody and minimal like a live-stream tech-talk background. Plenty of dark negative space in the lower two-thirds of the frame for text/card overlays. No readable text, no logos, no UI chrome in the image itself. Dark charcoal (#0B1B1E) base tones with cyan (#00D2D2) accent glow. High resolution, professional broadcast-graphics style.
+      <p>
+        <strong>Content-matched to the lower thirds on purpose:</strong> the scene
+        layout below mirrors the actual flow the three cards describe — a cluster of
+        nodes at the top, a single distinct gateway/connector partway down, and a
+        glowing line handing off toward the bottom where the Pod label sits — instead
+        of a generic tech backdrop unrelated to what the cards say.
+      </p>
+      <pre id="bg-prompt">Create a dark, tech-themed isometric background illustration that visually
+represents a Kubernetes traffic flow: cluster → ingress gateway → pod.
+
+SCENE LAYOUT (top to bottom, mirroring the flow below):
+- Upper area: a cluster of glowing cyan cube-shaped nodes grouped together
+  on an isometric platform, representing the Kubernetes Test Cluster.
+  Slightly larger and denser than the other node groups, to signal "this
+  is the entry point."
+- Middle area: a single glowing connector/port node (like a network jack
+  or gateway socket) that the cluster's traffic funnels into — this
+  represents the Ingress Gateway. Render it as a distinct, brighter
+  focal point with a visible glowing cable/line running down from it.
+- The glowing line from the gateway node bends and travels down toward
+  the bottom of the frame, ending just above where the label row sits —
+  visually "handing off" to the Pod label below.
+- Scatter a few smaller, dimmer server racks and node clusters in the
+  background/periphery to suggest a larger data center, but keep them
+  visually secondary (less glow, more shadow) so the eye follows the
+  main cluster → gateway → down path.
+
+STYLE:
+Dark navy-black background (#0a1414), cyan/teal glowing accents
+(#2dd4d4) for the active flow path, dimmer teal-gray (#1a2e2e) for
+background elements. Isometric circuit-board style connection lines
+throughout. Cinematic, moody, high-tech.
+
+FOREGROUND:
+Leave the bottom ~25% of the frame clear/darker for pill-shaped text
+labels to be overlaid separately. No text rendered in this image.
+
+Aspect ratio: 16:9, 1920x1080.
 
 Save to: assets/k8s-explainer-background.png</pre>
     </div>

@@ -13,23 +13,25 @@
     <p>
       The design/implementation spec for <a href="explainer.html">explainer.html</a>
       and the engine generalization that made it possible — plus (§8) how that
-      Kubernetes example became the shared default across all three outputs, and
-      (§9) a full audit-style reference to every other doc in this repo. This page
-      mirrors
+      Kubernetes example became the shared default across all three outputs,
+      (§9) a full audit-style reference to every other doc in this repo, and
+      (§10) the content-matched background replacement and standing rules that
+      came out of it. This page mirrors
       <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a>
       on-site. It sits alongside <code>problem.md</code> (the unmodified motion/visual
       contract for the base 2-card spring) and does not change it.
     </p>
 
     <div class="card-panel">
-      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended
-      (2026-07-18, see §8–9 below). Scope decided via clarifying questions on
+      <p><strong>Status:</strong> ✅ implemented (2026-07-17), 🔄 extended twice
+      (2026-07-18, see §8–10 below). Scope decided via clarifying questions on
       2026-07-17: new standalone page, background image pre-generated as a
       static asset, sequential staged reveal (Cluster → Ingress Gateway → Pod).
       Extended 2026-07-18: the Kubernetes example became the shared default
-      content across <strong>all three outputs</strong>, not just
-      <code>explainer.html</code> — §8 covers what changed and why, §9 is a
-      full project reference.</p>
+      content across <strong>all three outputs</strong> (§8), a full project
+      reference was added (§9), and the background was replaced with a
+      content-matched version plus a standing content-matching rule and a
+      Fly.io deploy reminder (§10).</p>
     </div>
 
     <div class="card-panel">
@@ -141,6 +143,7 @@
       </ul>
 
       <h3>3.4 Background image</h3>
+      <p>⚠️ <strong>Superseded 2026-07-18 — see §10.</strong> Left here for the historical record.</p>
       <ul>
         <li>Generated once, ahead of time, and committed as a static asset — no live API calls from the page.</li>
         <li>Generated via the <code>image-generation</code> skill (fal.ai <code>nano-banana-2</code>, fal's hosted alias for Gemini 2.5 Flash Image / "Nano Banana").</li>
@@ -305,6 +308,57 @@
         <li><strong><code>tests/test_pages.py</code></strong> + CI workflow — stdlib-only smoke test, every page + every local asset, runs on every push/PR.</li>
         <li><strong>Footer</strong> — links to this spec, the hosted API, GitHub, Actions, plus the theme toggle — one shared component, not duplicated per page.</li>
       </ul>
+    </div>
+
+    <div class="card-panel">
+      <h2>🖼️ 10. Addendum (2026-07-18, later same day): content-matched background</h2>
+      <p>
+        <strong>Replaces §3.4's image/prompt.</strong> The repo owner supplied both
+        a much more specific prompt and a finished reference image
+        (<code>assets/content-matched to the lower third.png</code>, generated
+        externally) and asked that it become the standard going forward:
+        <strong>backgrounds must relate to what the lower thirds actually say, not
+        just be generically theme-appropriate.</strong>
+      </p>
+
+      <h3>10.1 What changed</h3>
+      <ul>
+        <li>
+          <code>assets/k8s-explainer-background.png</code> was replaced with a
+          resized/optimized (1920×1080, PNG, Lanczos) copy of the supplied
+          reference image. The raw upload is left in place at
+          <code>assets/content-matched to the lower third.png</code> as the source.
+        </li>
+        <li>The new prompt is now shown on <a href="explainer.html">explainer.html</a>'s background-credit panel — see the page itself for the full text.</li>
+      </ul>
+
+      <h3>10.2 Standing rule (applies going forward, not just this asset)</h3>
+      <p>
+        <strong>Any background generated for this project must be
+        content-matched to the lower thirds it sits behind, and its layout must
+        correspond to where those labels/cards actually land on screen</strong> —
+        not a generic on-theme backdrop. Concretely: the visual composition should
+        echo the structure of the content (e.g. a top-to-bottom flow illustration
+        behind top-to-bottom staged cards), and empty/dark space must be
+        deliberately left where the card row actually sits (bottom ~20–25% of frame
+        here) rather than the cards landing on top of busy detail. Check this
+        before generating, not after — regenerating already-wrong compositions is
+        more expensive than specifying the layout correctly the first time.
+      </p>
+
+      <h3>10.3 Deploy reminder (standing rule, <code>server/</code>)</h3>
+      <p>
+        <strong>Any change to <code>server/</code> must be followed by
+        <code>fly deploy -a lower-thirds-api</code> (from inside
+        <code>server/</code>) before the change is considered done.</strong> The
+        static site auto-deploys to GitHub Pages on every push via
+        <code>.github/workflows/static.yml</code>; the Go API does not
+        auto-deploy anywhere — it only updates when <code>fly deploy</code> is run
+        by hand. It's easy to commit a <code>server/</code> change, push, and
+        assume everything shipped, when the live API at
+        <a href="https://lower-thirds-api.fly.dev" target="_blank" rel="noopener">lower-thirds-api.fly.dev</a>
+        is still running the old binary.
+      </p>
     </div>
   </main>
 

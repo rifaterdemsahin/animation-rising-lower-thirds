@@ -1,11 +1,12 @@
 # Master Spec: Kubernetes Flow Explainer (3rd output + engine generalization)
 
-Status: **implemented** (2026-07-17), **extended** (2026-07-18, see §8-9). Scope
-decided via clarifying questions on 2026-07-17: new standalone page, background
-image pre-generated as a static asset, sequential staged reveal (Cluster → Ingress
-Gateway → Pod). Extended 2026-07-18: the Kubernetes example became the shared
-default content across all three outputs, not just `explainer.html` — see §8 for
-what changed and why, §9 for a full project reference.
+Status: **implemented** (2026-07-17), **extended twice** (2026-07-18, see §8-10).
+Scope decided via clarifying questions on 2026-07-17: new standalone page,
+background image pre-generated as a static asset, sequential staged reveal
+(Cluster → Ingress Gateway → Pod). Extended 2026-07-18: the Kubernetes example
+became the shared default content across all three outputs (§8), a full project
+reference was added (§9), and the background was replaced with a content-matched
+version plus a standing content-matching rule and a Fly.io deploy reminder (§10).
 
 This spec sits alongside `problem.md` (which remains the unmodified motion/visual
 contract for the base 2-card "Elastic Rise" spring) and extends the toolbox described
@@ -93,6 +94,11 @@ specific to this explainer's teaching layout, not the general lower-thirds primi
   the same query-string API convention (`?autoplay=1`) if wired up.
 
 ### 3.4 Background image
+
+> **⚠️ Superseded 2026-07-18 — see §10.** The image and prompt below were the
+> first version; §10 replaces both with a content-matched version (the scene
+> layout now mirrors the actual cluster → gateway → pod flow instead of being
+> generic K8s-themed decoration). Left here for the historical record.
 
 - Generated once, ahead of time, and committed as a static asset — **no live API
   calls from the page** (this is a static site with no server and no build step; a
@@ -291,3 +297,76 @@ easy to lose track of** (all implemented, all live):
 - **Footer** carries links to this spec, the hosted API, the GitHub repo, and
   GitHub Actions, plus the theme toggle — one shared component
   (`assets/js/nav.js`), not duplicated per page.
+
+---
+
+## 10. Addendum (2026-07-18, later same day): content-matched background
+
+**Replaces §3.4's image/prompt.** The repo owner supplied both a much more
+specific prompt and a finished reference image
+(`assets/content-matched to the lower third.png`, generated externally) and asked
+that it become the standard going forward: **backgrounds must relate to what the
+lower thirds actually say, not just be generically theme-appropriate.**
+
+### 10.1 What changed
+
+- `assets/k8s-explainer-background.png` was replaced with a resized/optimized
+  (1920×1080, PNG, `PIL`/Lanczos) copy of the supplied reference image. The raw
+  upload is left in place at `assets/content-matched to the lower third.png` as
+  the source.
+- The new prompt (below) replaces §3.4's — it's now what's shown on
+  `explainer.html`'s background-credit panel and recorded here:
+
+  > Create a dark, tech-themed isometric background illustration that visually
+  > represents a Kubernetes traffic flow: cluster → ingress gateway → pod.
+  >
+  > SCENE LAYOUT (top to bottom, mirroring the flow below):
+  > - Upper area: a cluster of glowing cyan cube-shaped nodes grouped together
+  >   on an isometric platform, representing the Kubernetes Test Cluster.
+  >   Slightly larger and denser than the other node groups, to signal "this
+  >   is the entry point."
+  > - Middle area: a single glowing connector/port node (like a network jack
+  >   or gateway socket) that the cluster's traffic funnels into — this
+  >   represents the Ingress Gateway. Render it as a distinct, brighter
+  >   focal point with a visible glowing cable/line running down from it.
+  > - The glowing line from the gateway node bends and travels down toward
+  >   the bottom of the frame, ending just above where the label row sits —
+  >   visually "handing off" to the Pod label below.
+  > - Scatter a few smaller, dimmer server racks and node clusters in the
+  >   background/periphery to suggest a larger data center, but keep them
+  >   visually secondary (less glow, more shadow) so the eye follows the
+  >   main cluster → gateway → down path.
+  >
+  > STYLE: Dark navy-black background (#0a1414), cyan/teal glowing accents
+  > (#2dd4d4) for the active flow path, dimmer teal-gray (#1a2e2e) for
+  > background elements. Isometric circuit-board style connection lines
+  > throughout. Cinematic, moody, high-tech.
+  >
+  > FOREGROUND: Leave the bottom ~25% of the frame clear/darker for
+  > pill-shaped text labels to be overlaid separately. No text rendered in
+  > this image.
+  >
+  > Aspect ratio: 16:9, 1920x1080. **Save to: `assets/k8s-explainer-background.png`.**
+
+### 10.2 Standing rule (applies going forward, not just this asset)
+
+**Any background generated for this project must be content-matched to the
+lower thirds it sits behind, and its layout must correspond to where those
+labels/cards actually land on screen** — not a generic on-theme backdrop. Concretely:
+the visual composition should echo the structure of the content (e.g. a
+top-to-bottom flow illustration behind top-to-bottom staged cards), and empty/dark
+space must be deliberately left where the card row actually sits (bottom ~20-25%
+of frame here) rather than the cards landing on top of busy detail. Check this
+before generating, not after — regenerating already-wrong compositions is more
+expensive than specifying the layout correctly the first time.
+
+### 10.3 Deploy reminder (standing rule, `server/`)
+
+**Any change to `server/` must be followed by `fly deploy -a lower-thirds-api`
+(from inside `server/`) before the change is considered done.** The static site
+auto-deploys to GitHub Pages on every push via `.github/workflows/static.yml`;
+the Go API does not auto-deploy anywhere — it only updates when `fly deploy` is
+run by hand. It's easy to commit a `server/` change, push, and assume everything
+shipped, when the live API at
+[lower-thirds-api.fly.dev](https://lower-thirds-api.fly.dev) is still running
+the old binary.
