@@ -9,4 +9,12 @@ Problem Defined : https://github.com/rifaterdemsahin/animation-rising-lower-thir
 
 - Example : Real Jobs / Real People
 
+
+Visual :
+
 <img width="1728" height="940" alt="image" src="https://github.com/user-attachments/assets/0b98495e-be5e-4197-8776-7fbd0bb17615" />
+
+
+Environment :
+- Use it in a video
+- Use it in a live session
