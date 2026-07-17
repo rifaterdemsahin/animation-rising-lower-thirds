@@ -1,6 +1,8 @@
 # animation-rising-lower-thirds
 Example of practical Animation Helper
 
+> Live site: https://rifaterdemsahin.github.io/animation-rising-lower-thirds/
+
 > https://youtu.be/jcrLdUPHQZQ?t=61
 
 Goal : Create a structure where there is 3 coming up lower third concepts rising with timing. 
@@ -16,5 +18,5 @@ Visual :
 
 
 Environment :
-- Use it in a video
-- Use it in a live session
+- Use it in a video → [video-recorded.html](https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-recorded.html)
+- Use it in a live session → [video-live.html](https://rifaterdemsahin.github.io/animation-rising-lower-thirds/video-live.html)
