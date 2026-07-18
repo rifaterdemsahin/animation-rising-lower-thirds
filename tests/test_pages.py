@@ -37,7 +37,7 @@ PAGES = [
     ("mcp-guide.html", ["<title>API Guide", "lower-thirds-api.fly.dev", "render_lower_third"]),
     ("recommendation.html", ["<title>Recommendations", "ffmpeg-usage"]),
     ("master-spec.html", ["<title>Master Spec", 'id="note-taker"']),
-    ("cost-analysis.html", ["<title>Cost Analysis", "nano-banana-2", "Fly.io", "Baked or parametric"]),
+    ("cost-analysis.html", ["<title>Cost Analysis", "nano-banana-2", "Fly.io", "Baked or parametric", "Scripted generation"]),
     ("proposed-solution.html", ["<title>Proposed Solution", "generate_background", "render_mixed_video"]),
     ("markdown_renderer.html", ["<title>Docs", 'id="doc-content"', "renderMarkdown"]),
     ("sitemap.html", ["<title>Sitemap", "markdown_renderer.html", "MASTER_SPEC.md"]),

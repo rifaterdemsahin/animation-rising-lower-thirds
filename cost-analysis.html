@@ -14,7 +14,8 @@
       What each environment actually needs as input, what it produces,
       roughly how long it takes to build (one-time) versus use (per project),
       what a <em>later change</em> costs (often very different from the first
-      build), and the only two places real money changes hands in this whole
+      build), what a <em>script</em> changing everything at once costs at
+      volume, and the only two places real money changes hands in this whole
       system. See <a href="index.html">index.html</a>'s "Same animation,
       three different environments" section for how the outputs differ
       visually; this page is about effort and cost specifically.
@@ -146,6 +147,52 @@
         — and even that's the same ~$0.08/regeneration whether it's the first
         time or the fiftieth.
       </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤖 Scripted generation — when the background <em>and</em> the text/emojis both change every time</h2>
+      <p>
+        The section above assumes one thing changes at a time (just text, or
+        just the background). A script or an MCP agent driving this
+        programmatically (the URL API, the JS API, or the hosted API — see
+        <a href="mcp-guide.html">mcp-guide.html</a>) is a different case: it's
+        realistic for <strong>every</strong> field — icons, text, and the
+        background prompt — to be different on every single call, e.g.
+        generating a batch of N videos that each explain a different flow.
+      </p>
+      <ul>
+        <li>
+          <strong>Cost per unique asset ≈ $0.08, not per field changed.</strong>
+          The text/emoji fields are parametric — however many of them differ
+          from the last run, they add $0. The only thing that costs money is
+          the background image, so cost scales with <em>how many distinct
+          backgrounds</em> you generate, not how many labels or how much text
+          you vary. A batch of 50 videos with 50 different topics and 50
+          different backgrounds ≈ 50 × $0.08 ≈ <strong>$4</strong>. The same
+          50 videos sharing one background ≈ <strong>$0.08 total</strong>.
+        </li>
+        <li>
+          <strong>It's two calls today, not one.</strong> Nothing in this
+          repo currently lets a script generate the background and the
+          animation in a single request — <code>server/main.go</code>'s
+          <code>/render</code> only builds the animation from a background
+          you already have. A script has to (1) generate the image itself
+          (e.g. via the same <code>image-generation</code> skill/fal.ai call
+          this project uses) and (2) separately call this project's URL/JS/
+          hosted API with the result. <a href="proposed-solution.html">proposed-solution.html</a>
+          describes what collapsing that into one call would take.
+        </li>
+        <li>
+          <strong>Batch-friendly mitigation:</strong> if many generated
+          assets share a visual theme (e.g. "explain a Kubernetes flow" reused
+          across a whole batch with only the labels changing), generate
+          <em>one</em> background and pass its path/URL into every call in
+          the batch instead of a new prompt each time — same tactic as
+          <a href="canva-value.html">canva-value.html</a>'s reusable image
+          library, just applied to a scripted loop instead of manual Canva
+          duplication.
+        </li>
+      </ul>
     </div>
 
     <div class="card-panel">
