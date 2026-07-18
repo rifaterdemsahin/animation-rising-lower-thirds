@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Manual Canva Makes Sense — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>🎨 Why Manual Canva Still Makes Sense</h1>
+    <p>
+      <a href="cost-analysis.html">cost-analysis.html</a> is honest that the
+      manual <a href="canva-guide.html">Canva path</a> is the slowest and most
+      expensive of the options on this site — ~15–30 minutes and ~$0.30+ in
+      generation, versus seconds and cents for the coded tools. That's a real
+      cost. It's also not the whole story: raw minutes-per-project isn't the
+      only thing that matters, and most of that cost is a <em>one-time</em>
+      setup tax, not a recurring one — this page is about both halves.
+    </p>
+
+    <div class="card-panel">
+      <h2>⚖️ What the time/cost numbers don't capture</h2>
+      <p>
+        <a href="cost-analysis.html">cost-analysis.html</a>'s "time to use"
+        column measures one thing: how long it takes to produce an asset. It
+        doesn't measure who can produce it, or what happens after — and
+        that's where Canva earns back the time it costs upfront:
+      </p>
+      <ul>
+        <li>
+          <strong>No code, no dev environment.</strong> Anyone on a team can
+          open a Canva design and change text, retime an entrance, or swap a
+          color — no git, no browser dev tools, no understanding of
+          <code>springState()</code> required. The coded tools' Builder is
+          genuinely easy too, but it's still a webpage someone has to be
+          shown; Canva is a tool most non-engineers already know.
+        </li>
+        <li>
+          <strong>Real-time collaboration.</strong> Multiple people can be in
+          the same Canva file at once — a designer placing labels while
+          someone else writes copy. Nothing on this site has a multi-user
+          equivalent; the Builder is a single-browser-tab tool.
+        </li>
+        <li>
+          <strong>Survives this project going away.</strong> A Canva design
+          doesn't depend on <code>lower-thirds-api.fly.dev</code> staying up,
+          GitHub Pages staying free, or this repo being maintained. It's a
+          self-contained asset in your own Canva account.
+        </li>
+        <li>
+          <strong>No fixed spec.</strong> The coded engine is deliberately
+          locked to <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>'s
+          exact visual spec — that's a feature for consistency, but a
+          constraint if you want something the spec doesn't allow (a fourth
+          card, a different shape, mixing in stock photography). Canva has no
+          such ceiling.
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-panel">
+      <h2>✂️ How to cut the time cost that's left</h2>
+      <p>
+        The ~15–30 minute estimate in <a href="cost-analysis.html">cost-analysis.html</a>
+        assumes starting from nothing every time. Almost none of these steps
+        actually need repeating per project:
+      </p>
+      <ol>
+        <li>
+          <strong>Duplicate the template instead of starting fresh.</strong>
+          The biggest lever by far. The
+          <a href="https://canva.link/nqqjs8gf15aaj5r" target="_blank" rel="noopener">example design</a>
+          linked from <a href="canva-guide.html">canva-guide.html</a> already
+          has the background, three labels, placement, timing, and Rise
+          animations set up — duplicating it and swapping text/timing turns a
+          20-minute build into a 2–3 minute edit.
+        </li>
+        <li>
+          <strong>Build a small image library once, reuse it everywhere.</strong>
+          Generate a handful of background styles and common label
+          icon/text pairs up front and keep them in a Canva folder or your
+          Brand Kit. Per <a href="cost-analysis.html">cost-analysis.html</a>,
+          reusing an already-generated image costs $0 — the ~$0.30+ figure
+          only applies when every image is new.
+        </li>
+        <li>
+          <strong>Copy exact numbers instead of eyeballing them.</strong>
+          <a href="explainer.html">explainer.html</a>'s 🏗️ Builder computes
+          precise x/y positions and the 0ms/3200ms/6400ms stage timing for
+          you — paste those straight into Canva's Position panel and
+          timeline instead of guessing and iterating.
+        </li>
+        <li>
+          <strong>Save the animated label as a reusable element.</strong>
+          Once one label has its Rise animation configured correctly,
+          copy-pasting it (then just changing its text/icon and re-timing)
+          is faster than configuring the animation from scratch each time.
+        </li>
+        <li>
+          <strong>Split the work.</strong> Because Canva supports real-time
+          multi-user editing, image generation, placement, and copywriting
+          can happen in parallel across different people — something a
+          single-tab coded workflow can't do at all.
+        </li>
+      </ol>
+    </div>
+
+    <div class="card-panel">
+      <h2>📉 First use vs. every use after</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr><th></th><th>First project (from scratch)</th><th>Every project after (duplicated template)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Time</td>
+              <td>~15–30 minutes</td>
+              <td>~2–5 minutes — duplicate, swap text, adjust one image if the content genuinely changed</td>
+            </tr>
+            <tr>
+              <td>Cost</td>
+              <td>~$0.30–0.35 (4 new images)</td>
+              <td>$0 if reusing the background and label styles; ~$0.08 if only one new label needs a new image</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        That "every project after" column is close to — sometimes faster
+        than — the coded tools once you count the time to actually type
+        content into a form and review the result. The gap
+        <a href="cost-analysis.html">cost-analysis.html</a> shows is mostly a
+        first-time setup cost, not a per-project one.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤔 Rule of thumb</h2>
+      <ul>
+        <li>
+          <strong>Pick Canva</strong> if non-engineers will need to make
+          ongoing edits, if you want the design to outlive this project, or
+          if you'll want to deviate from the fixed visual spec — the upfront
+          setup cost pays for itself on the second use.
+        </li>
+        <li>
+          <strong>Pick the coded tools</strong> (<a href="video-recorded.html">video-recorded.html</a>,
+          <a href="video-live.html">video-live.html</a>,
+          <a href="explainer.html">explainer.html</a>) for a one-off you
+          won't touch again, or when you need the exact spring physics —
+          Canva's Rise animation approximates it but doesn't reproduce the
+          damped-harmonic math exactly.
+        </li>
+      </ul>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>
