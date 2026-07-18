@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canva MCP — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>🤖 Implement the Explainer in Canva via Canva MCP</h1>
+    <p>
+      A third path to the same Kubernetes flow example, alongside
+      <a href="explainer.html">explainer.html</a> (the coded engine) and
+      <a href="canva-guide.html">canva-guide.html</a> (build it by hand in
+      Canva). This one uses <strong>Canva's MCP server tools</strong> —
+      <code>generate-design</code>, <code>create-design-from-candidate</code>,
+      <code>export-design</code> — driven by an AI agent, so the "creative
+      part" (background + three lower-third label cards, matching
+      <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>'s
+      spec) happens without a human clicking through the Canva editor, and the
+      agent hands back a link to the finished design.
+    </p>
+
+    <div class="card-panel">
+      <h2>🎬 Result</h2>
+      <p>
+        Generated from a single prompt describing the same content
+        <a href="explainer.html">explainer.html</a> defaults to
+        (<code>LowerThirds.PRESETS.kubernetes</code>: Cluster → Ingress
+        Gateway → Pod) — background flow diagram plus three rounded,
+        dark-teal lower-third cards with a cyan icon and white serif text
+        each, per <code>problem.md</code>.
+      </p>
+      <img
+        src="assets/canva-mcp-explainer-preview.png"
+        alt="Canva design generated via MCP: a Kubernetes request-flow background with three lower-third label cards — Kubernetes Test Cluster, Ingress Gateway, Pod"
+        style="max-width: 100%; border-radius: 12px; display: block;"
+      >
+      <p>
+        <strong>Design link (created live via Canva MCP for this page):</strong>
+        <a href="https://www.canva.com/d/BakYBGi9j-kkuj2" target="_blank" rel="noopener">canva.com/d/BakYBGi9j-kkuj2</a>
+        — open it, duplicate it into your own account, and use it as a
+        starting point (add entrance animations per
+        <a href="canva-guide.html">canva-guide.html</a>'s step 5 — MCP
+        generation produces the static composition, not the per-card Rise
+        timing, which is still a manual Canva editor step today).
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🪜 How it was made (the actual tool calls)</h2>
+      <p>
+        No manual Canva UI work — every step below is an MCP tool call an
+        agent (this one, or your own) can make against Canva's MCP server.
+      </p>
+
+      <h3>1. Generate design candidates</h3>
+      <p>
+        <code>generate-design</code> with <code>design_type: "youtube_thumbnail"</code>
+        (a 16:9 canvas, the same aspect ratio this project's background image
+        and video outputs use) and a prompt describing the content and the
+        exact visual spec — background flow (Cluster → Ingress Gateway → Pod),
+        card colors (<code>#0B1B1E</code> @ 85% opacity, cyan
+        <code>#00D2D2</code> icon, white serif text), rounded corners, thin
+        semi-transparent border. This returns several candidate designs to
+        pick from, not a final editable one yet.
+      </p>
+
+      <h3>2. Turn a candidate into a real, editable design</h3>
+      <p>
+        <code>create-design-from-candidate</code> with the chosen
+        <code>candidate_id</code> and the <code>job_id</code> from step 1.
+        This is the step that actually creates the design in the connected
+        Canva account and returns a design ID plus <code>edit_url</code>/
+        <code>view_url</code> — the link referenced above.
+      </p>
+
+      <h3>3. Export a preview</h3>
+      <p>
+        <code>get-export-formats</code> to confirm PNG is supported for this
+        design, then <code>export-design</code> with
+        <code>format: {"type": "png"}</code> to get a download URL. That
+        export URL is a short-lived signed S3 link, so the image embedded on
+        this page was downloaded once and committed to
+        <code>assets/canva-mcp-explainer-preview.png</code> rather than
+        linked directly — the Canva design link above is the durable
+        reference, this PNG is just a static snapshot of it.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🗣️ Prompt to give an AI agent</h2>
+      <p>
+        If your MCP client is already connected to Canva's MCP server, copy
+        this straight into your agent's chat to reproduce the design above
+        (or swap in your own three stages):
+      </p>
+      <div class="prompt-block">
+        <pre>Using the Canva MCP tools, generate a 16:9 design (design_type
+"youtube_thumbnail") showing a Kubernetes request flow: Cluster on the left,
+Ingress Gateway in the middle, Pod on the right, connected by directional
+arrows. Overlay three rounded "lower third" label cards near the bottom, one
+per stage, each with an icon on the left and bold white serif text on the
+right: 🖥️ "Kubernetes Test Cluster", 🚪 "Ingress Gateway", 📦 "Pod". Cards:
+dark teal near-black background (#0B1B1E) at 85% opacity, rounded corners
+24-30px, thin semi-transparent white border, cyan (#00D2D2) icon color,
+matching this repo's problem.md spec. Then call create-design-from-candidate
+on the best result and give me the resulting design link.</pre>
+        <button class="copy-prompt-btn" type="button">📋 Copy</button>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤔 This vs. the other two paths</h2>
+      <ul>
+        <li>
+          <strong>Use this Canva MCP path</strong> if you want a Canva design
+          to hand off or keep editing, but don't want to place elements and
+          type colors by hand — describe the content once and let an agent
+          generate the starting composition, then fine-tune (positions,
+          per-card Rise timing) in the editor.
+        </li>
+        <li>
+          <strong>Use <a href="canva-guide.html">canva-guide.html</a></strong>
+          for full manual control over every element, image, and animation
+          from the start — useful when the content-matched background needs a
+          careful, specific prompt rather than a general description.
+        </li>
+        <li>
+          <strong>Use <a href="explainer.html">explainer.html</a>/<a href="video-recorded.html">video-recorded.html</a>/<a href="video-live.html">video-live.html</a></strong>
+          for the exact coded spring physics, instant re-typing of new text,
+          or a downloadable video/live overlay — see
+          <a href="mcp-guide.html">mcp-guide.html</a> for driving those
+          programmatically too.
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      document.querySelectorAll(".copy-prompt-btn").forEach(function (btn) {
+        var pre = btn.parentElement.querySelector("pre");
+        var originalLabel = btn.textContent;
+        btn.addEventListener("click", function () {
+          navigator.clipboard.writeText(pre.textContent).then(function () {
+            btn.textContent = "✅ Copied!";
+          }, function () {
+            btn.textContent = "❌ Copy failed";
+          });
+          setTimeout(function () { btn.textContent = originalLabel; }, 1800);
+        });
+      });
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

@@ -34,6 +34,7 @@ PAGES = [
     ("explainer.html", ["<title>Explainer", "Kubernetes Test Cluster", 'id="play-btn"']),
     ("canva-guide.html", ["<title>Canva Guide", "canva.link", "Rise"]),
     ("canva-value.html", ["<title>Why Manual Canva", "Duplicate the template", "Rule of thumb"]),
+    ("canva-mcp.html", ["<title>Canva MCP", "generate-design", "create-design-from-candidate"]),
     ("mcp-guide.html", ["<title>API Guide", "lower-thirds-api.fly.dev", "render_lower_third"]),
     ("recommendation.html", ["<title>Recommendations", "ffmpeg-usage"]),
     ("master-spec.html", ["<title>Master Spec", 'id="note-taker"']),

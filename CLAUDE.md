@@ -152,6 +152,16 @@ single pre-generated static asset shared by both `video-recorded.html` and
   Cross-references `explainer.html`'s Builder for exact x/y and
   `problem.md`/`MASTER_SPEC.md` for the visual spec and timing values.
 
+- **`canva-mcp.html`** — a third path: generate the same Kubernetes flow
+  composition in Canva via Canva's MCP server tools (`generate-design` →
+  `create-design-from-candidate` → `export-design`), driven by an AI agent
+  instead of clicking through the Canva editor by hand. Documents the exact
+  tool-call sequence and a copy-pasteable agent prompt, embeds a static export
+  of the result (`assets/canva-mcp-explainer-preview.png`, since Canva's
+  export URLs are short-lived signed links), and links to the resulting
+  editable Canva design. Cross-references `canva-guide.html` (manual path) and
+  `problem.md` for the visual spec.
+
 - **`cost-analysis.html`** — per-environment time/cost breakdown (build time,
   per-use time, and the two places real money is spent: image generation and
   Fly.io hosting). Update the per-image cost figure if the `image-generation`

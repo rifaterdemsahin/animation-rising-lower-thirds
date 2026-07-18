@@ -18,6 +18,7 @@
         { href: "explainer.html", label: "🧭 Explainer" },
         { href: "canva-guide.html", label: "🎨 Canva Guide (manual, no-code)" },
         { href: "canva-value.html", label: "⚖️ Why Manual Canva Makes Sense" },
+        { href: "canva-mcp.html", label: "🤖 Canva MCP (agent-generated)" },
       ],
     },
     {
@@ -44,6 +45,7 @@
     { href: "explainer.html", label: "🧭 Explainer" },
     { href: "canva-guide.html", label: "🎨 Canva Guide" },
     { href: "canva-value.html", label: "⚖️ Why Manual Canva Makes Sense" },
+    { href: "canva-mcp.html", label: "🤖 Canva MCP" },
     { href: "mcp-guide.html", label: "📖 API Guide" },
     { href: "recommendation.html", label: "💡 Recommendations" },
     { href: "proposed-solution.html", label: "🤖 Proposed Solution" },
