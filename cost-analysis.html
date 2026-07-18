@@ -11,13 +11,13 @@
   <main>
     <h1>💰 Cost Analysis</h1>
     <p>
-      What each environment actually needs as input, what it produces, and
-      roughly how long it takes to build (one-time) versus use (per project)
-      — plus the only two places real money changes hands in this whole
-      system. See
-      <a href="index.html">index.html</a>'s "Same animation, three different
-      environments" section for how the outputs differ visually; this page is
-      about effort and cost specifically.
+      What each environment actually needs as input, what it produces,
+      roughly how long it takes to build (one-time) versus use (per project),
+      what a <em>later change</em> costs (often very different from the first
+      build), and the only two places real money changes hands in this whole
+      system. See <a href="index.html">index.html</a>'s "Same animation,
+      three different environments" section for how the outputs differ
+      visually; this page is about effort and cost specifically.
     </p>
 
     <div class="card-panel">
@@ -78,6 +78,74 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>🔄 The cost of change — what happens the second time</h2>
+      <p>
+        The table above is <em>first creation</em>. Real projects don't stop
+        there — text gets revised, a stage gets renamed, someone asks for a
+        different color. What that costs depends entirely on whether the
+        output is <strong>baked</strong> (a finished file — changing it means
+        redoing the export) or <strong>parametric</strong> (rendered live
+        from inputs — changing it just means changing the input, at the same
+        cost as the first time, not a fresh "editing" tax on top).
+      </p>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Environment</th>
+              <th>Baked or parametric?</th>
+              <th>To change text/timing</th>
+              <th>To change the background/visual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>🎥 Recorded Video</td>
+              <td>Baked — the WebM/MP4 is a finished file</td>
+              <td>Full re-export: re-type, re-record, re-download (~10s, $0) — the old file can't be edited, only replaced</td>
+              <td>Generate a new background (~$0.08), then re-export</td>
+            </tr>
+            <tr>
+              <td>📡 Live Overlay</td>
+              <td>Parametric — nothing is ever "finished," it's rendered fresh each time it loads</td>
+              <td>Instant — edit the form/URL params, it's live; there's no separate old artifact to invalidate</td>
+              <td>N/A — never has a background</td>
+            </tr>
+            <tr>
+              <td>🧭 Explainer</td>
+              <td>Parametric (the page); baked (the background image it displays)</td>
+              <td>Instant via the Builder — live re-render, $0, same as first use</td>
+              <td>New generation (~$0.08) — the one genuinely baked part of this output</td>
+            </tr>
+            <tr>
+              <td>🎨 Canva (manual)</td>
+              <td>Parametric (the design, while it stays a Canva file); baked the moment you export</td>
+              <td>Open the design, edit the text/timing directly — no regeneration needed (see <a href="canva-value.html">canva-value.html</a>)</td>
+              <td>Regenerate and swap the image in Canva (~$0.08) — re-export if you'd already exported</td>
+            </tr>
+            <tr>
+              <td>🚀 Hosted API</td>
+              <td>Parametric — every call is a fresh render</td>
+              <td>Call again with different params — no incremental cost beyond that one request</td>
+              <td>N/A — background not supported server-side yet, see <a href="proposed-solution.html">proposed-solution.html</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The pattern: anything <strong>parametric</strong> (Live Overlay,
+        Explainer's page, a live Canva design, the API) costs the same to
+        change as it did to create the first time — a change isn't a special,
+        more expensive operation, it's just running the same thing again with
+        different input. The only genuinely recurring cost is regenerating a
+        <strong>baked image</strong> (a background) or a <strong>baked
+        export</strong> (a rendered video file, or a downloaded Canva export)
+        — and even that's the same ~$0.08/regeneration whether it's the first
+        time or the fiftieth.
+      </p>
     </div>
 
     <div class="card-panel">
