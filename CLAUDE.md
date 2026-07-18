@@ -101,8 +101,19 @@ single pre-generated static asset shared by both `video-recorded.html` and
 - **`assets/js/nav.js`** — injects the shared top nav and footer into every page
   (`document.body.insertBefore`/`appendChild`). There's no templating/build step,
   so this script is how nav/footer stay in one place instead of being duplicated
-  HTML per page. Adding a new page means adding it to the `PAGES` array here and
-  including the script tag.
+  HTML per page. The top nav is grouped, not flat: `NAV_GROUPS` has a plain
+  `🏠 Home` link plus two dropdowns (`🎬 Outputs` — the four content-producing
+  pages; `📚 Resources` — everything reference/docs) — hover on desktop, click
+  to toggle on touch, via `.nav-dropdown`/`.open`. `SEARCH_INDEX` is a separate
+  flat title→URL list (pages + every markdown doc, matching `SEARCH_INDEX`
+  entries to `sitemap.html`'s coverage) powering the nav search box — title-only
+  matching, not full-text, on purpose (fetching every doc's body client-side
+  for search would add real latency for little benefit at this page count).
+  The footer is deliberately just external/meta links (live API, GitHub,
+  Actions) plus the theme toggle — content pages live in the top nav's
+  Resources dropdown instead. Adding a new page means: `NAV_GROUPS` (pick
+  Outputs/Resources) or leave it footer-only if it's truly meta, `SEARCH_INDEX`,
+  `PAGES` in `tests/test_pages.py`, and `sitemap.html`.
 
 - **`assets/css/style.css`** — site chrome (nav, footer, panels, forms).
   **`assets/css/lower-thirds.css`** — the card visuals themselves (`.lt-card`,
@@ -134,6 +145,33 @@ single pre-generated static asset shared by both `video-recorded.html` and
   ychoi-kr/claude-ffmpeg-skill) for post-processing exported video (format
   conversion, compression, GIFs). Use it rather than inventing ad-hoc ffmpeg
   invocations when asked to convert/optimize a recorded clip.
+
+- **`canva-guide.html`** — a no-code alternative path: generate the background
+  and each lower-third label as images (Gemini/fal.ai), then place/time/animate
+  them by hand in Canva, using the same coordinates/timing the engine computes.
+  Cross-references `explainer.html`'s Builder for exact x/y and
+  `problem.md`/`MASTER_SPEC.md` for the visual spec and timing values.
+
+- **`cost-analysis.html`** — per-environment time/cost breakdown (build time,
+  per-use time, and the two places real money is spent: image generation and
+  Fly.io hosting). Update the per-image cost figure if the `image-generation`
+  skill's pricing changes.
+
+- **`proposed-solution.html`** — a *proposal*, not implemented: extending
+  `server/` with image-generation, HTML-generation, and mixed-video-compositing
+  endpoints, exposed as MCP tools. Don't treat anything on this page as already
+  built — cross-check `server/main.go` before assuming a described endpoint exists.
+
+- **`markdown_renderer.html`** — a small vanilla-JS markdown-to-HTML parser
+  (headers, bold/italic, inline code, fenced code blocks, links, bare URLs,
+  lists, tables, blockquotes, horizontal rules — not full CommonMark, just
+  what this repo's own `.md` files actually use) that fetches and renders any
+  file via `?file=path/to/file.md`. This is how every markdown doc in the repo
+  is reachable on-site without a hand-written HTML mirror per file.
+
+- **`sitemap.html`** — the definitive list of every page and every doc
+  (via `markdown_renderer.html?file=...`). Add new pages/docs here too, not
+  just to `assets/js/nav.js`.
 
 ## Hosted API (`server/`)
 

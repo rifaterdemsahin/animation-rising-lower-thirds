@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proposed Solution — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>🤖 Proposed Solution: One Agent Request, Not Five Manual Steps</h1>
+    <p>
+      A proposal, not something built yet — this page describes what could
+      be built next, not what exists today. See
+      <a href="mcp-guide.html">mcp-guide.html</a> for what's actually live
+      right now, and <a href="cost-analysis.html">cost-analysis.html</a> for
+      the time/cost this would collapse.
+    </p>
+
+    <div class="card-panel">
+      <h2>❗ The problem this solves</h2>
+      <p>
+        Going from "I have an idea for a lower-third animation" to a finished
+        asset currently touches several separate manual steps, per
+        <a href="cost-analysis.html">cost-analysis.html</a>: generate a
+        background image (Gemini/fal.ai, by hand), work out placement/timing
+        (the Builder, by hand), then render or export (a form on this site, or
+        Canva, by hand). Each step works well on its own, but nothing chains
+        them together — a person has to be in the loop at every handoff.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>💡 The proposal</h2>
+      <p>
+        Extend the already-deployed Go API
+        (<code>server/</code>, live at
+        <a href="https://lower-thirds-api.fly.dev" target="_blank" rel="noopener">lower-thirds-api.fly.dev</a>)
+        with a few more capabilities, and expose all of them as
+        <strong>MCP tools</strong> — so an agent can go from a plain-English
+        request to a finished video in one turn, calling the pipeline itself
+        instead of a person clicking through four different pages.
+      </p>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead><tr><th>Proposed MCP tool</th><th>Does</th><th>Builds on</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>generate_background(prompt)</code></td>
+              <td>Calls fal.ai's <code>nano-banana-2</code> endpoint server-side, returns/stores the generated image</td>
+              <td>The <code>image-generation</code> skill's approach, moved server-side instead of a local one-off script</td>
+            </tr>
+            <tr>
+              <td><code>generate_html(cards, background)</code></td>
+              <td>Renders an <code>explainer.html</code>-style page for the given content, for when the deliverable is an interactive page, not a video</td>
+              <td><code>assets/js/lower-thirds.js</code> — the same engine, driven server-side</td>
+            </tr>
+            <tr>
+              <td><code>render_mixed_video(cards, background, timing)</code></td>
+              <td>The "mixed video" — composites the (generated or supplied) background with the full animated card set into <strong>one</strong> exported video file, server-side</td>
+              <td>The existing <code>/render</code> endpoint's chromedp + <code>MediaRecorder</code> approach — extended to N cards and an optional background, closing the gap <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a> §8.4 flags today</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        All three (plus the existing <code>/render</code>) wrapped as proper
+        MCP tools — not just plain REST endpoints — per
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MCP_GUIDE.md">MCP_GUIDE.md</a>'s
+        "Option 2/3" pattern, just with more of the pipeline on the server
+        side instead of the client/agent side.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🔄 What the request would look like</h2>
+      <ol>
+        <li>You ask an agent: <em>"Make me a lower-thirds video explaining an auth flow: client → auth service → database."</em></li>
+        <li>Agent calls <code>generate_background</code> with a content-matched prompt (following the standing rule in <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a> §10.2 — the scene layout mirrors the actual flow, not a generic backdrop).</li>
+        <li>Agent calls <code>render_mixed_video</code> with that background plus the three stages and their timing.</li>
+        <li>Agent hands back the finished video — no manual prompting, no manual Builder placement, no manual Canva work.</li>
+      </ol>
+    </div>
+
+    <div class="card-panel">
+      <h2>⚠️ What this would actually take</h2>
+      <ul>
+        <li>
+          <strong>Cost control.</strong> Server-side image generation means
+          the API itself starts spending real money per call (see
+          <a href="cost-analysis.html">cost-analysis.html</a> — ~$0.08/image).
+          Needs either callers supplying their own <code>FAL_KEY</code>, or a
+          hard quota on a shared one, before this is safe to expose broadly.
+        </li>
+        <li>
+          <strong>Latency.</strong> Chaining image generation + headless
+          Chrome + video capture in one request could easily exceed a
+          reasonable HTTP timeout (the current <code>/render</code> already
+          uses a 45s context budget). This would likely need to become an
+          async job — submit, poll, download — rather than one synchronous
+          call.
+        </li>
+        <li>
+          <strong>Auth.</strong> The current single shared
+          <code>API_TOKEN</code> doesn't distinguish callers or track usage —
+          fine when the only cost is compute, less fine once each call can
+          cost real money.
+        </li>
+      </ul>
+      <p>
+        None of this is started — <code>server/main.go</code> still only
+        implements the 2-card <code>/render</code> described in
+        <a href="mcp-guide.html">mcp-guide.html</a> today.
+      </p>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docs — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>📄 <span id="doc-title">Docs</span></h1>
+    <p>
+      Renders any markdown file in this repo client-side — no build step, no
+      external library, just this page's own parser. See
+      <a href="sitemap.html">sitemap.html</a> for the full list of docs, or
+      pass <code>?file=path/to/file.md</code> yourself.
+    </p>
+    <div class="card-panel">
+      <div id="doc-content">Loading…</div>
+    </div>
+    <p id="doc-meta" style="font-size: 13px; color: var(--text-dim);"></p>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Inline formatting: code spans, bold, italic, explicit [text](url)
+      // links, then bare http(s) URLs — applied to an already-HTML-escaped
+      // string, since backtick/asterisk/bracket characters pass through
+      // HTML escaping unchanged, so this order never double-escapes.
+      function renderInline(escaped) {
+        var out = escaped;
+        out = out.replace(/`([^`]+)`/g, function (m, code) {
+          return "<code>" + code + "</code>";
+        });
+        out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        out = out.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, text, url) {
+          var external = /^https?:\/\//.test(url);
+          return '<a href="' + url + '"' + (external ? ' target="_blank" rel="noopener"' : "") + ">" + text + "</a>";
+        });
+        out = out.replace(/(^|\s)(https?:\/\/[^\s<]+)/g, function (m, pre, url) {
+          return pre + '<a href="' + url + '" target="_blank" rel="noopener">' + url + "</a>";
+        });
+        return out;
+      }
+
+      // A pragmatic block-level markdown parser covering what this repo's
+      // own docs actually use (headers, paragraphs, code fences, inline
+      // code, bold/italic, links, bare URLs, lists, tables, blockquotes,
+      // horizontal rules) — not full CommonMark compliance, just enough to
+      // render every .md file in this project correctly.
+      function renderMarkdown(md) {
+        var lines = md.replace(/\r\n/g, "\n").split("\n");
+        var html = [];
+        var i = 0;
+
+        function isTableSeparator(line) {
+          return /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(line);
+        }
+
+        function splitRow(line) {
+          var trimmed = line.trim().replace(/^\||\|$/g, "");
+          return trimmed.split("|").map(function (c) { return c.trim(); });
+        }
+
+        while (i < lines.length) {
+          var line = lines[i];
+
+          if (/^\s*$/.test(line)) { i++; continue; }
+
+          // Fenced code block
+          var fenceMatch = line.match(/^```(\w*)\s*$/);
+          if (fenceMatch) {
+            var codeLines = [];
+            i++;
+            while (i < lines.length && !/^```\s*$/.test(lines[i])) {
+              codeLines.push(lines[i]);
+              i++;
+            }
+            i++; // skip closing fence
+            html.push("<pre><code>" + escapeHtml(codeLines.join("\n")) + "</code></pre>");
+            continue;
+          }
+
+          // Horizontal rule
+          if (/^(-{3,}|\*{3,})\s*$/.test(line)) {
+            html.push("<hr>");
+            i++;
+            continue;
+          }
+
+          // ATX headers
+          var headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
+          if (headerMatch) {
+            var level = headerMatch[1].length;
+            html.push("<h" + level + ">" + renderInline(escapeHtml(headerMatch[2])) + "</h" + level + ">");
+            i++;
+            continue;
+          }
+
+          // Table (header row + separator row)
+          if (line.indexOf("|") !== -1 && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+            var headCells = splitRow(line);
+            i += 2;
+            var bodyRows = [];
+            while (i < lines.length && lines[i].indexOf("|") !== -1 && !/^\s*$/.test(lines[i])) {
+              bodyRows.push(splitRow(lines[i]));
+              i++;
+            }
+            var t = "<table><thead><tr>";
+            headCells.forEach(function (c) { t += "<th>" + renderInline(escapeHtml(c)) + "</th>"; });
+            t += "</tr></thead><tbody>";
+            bodyRows.forEach(function (row) {
+              t += "<tr>";
+              row.forEach(function (c) { t += "<td>" + renderInline(escapeHtml(c)) + "</td>"; });
+              t += "</tr>";
+            });
+            t += "</tbody></table>";
+            html.push('<div style="overflow-x: auto;">' + t + "</div>");
+            continue;
+          }
+
+          // Blockquote
+          if (/^>\s?/.test(line)) {
+            var quoteLines = [];
+            while (i < lines.length && /^>\s?/.test(lines[i])) {
+              quoteLines.push(lines[i].replace(/^>\s?/, ""));
+              i++;
+            }
+            html.push("<blockquote><p>" + renderInline(escapeHtml(quoteLines.join(" "))) + "</p></blockquote>");
+            continue;
+          }
+
+          // Unordered list
+          if (/^\s*[-*]\s+/.test(line)) {
+            var ulItems = [];
+            while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+              ulItems.push(lines[i].replace(/^\s*[-*]\s+/, ""));
+              i++;
+            }
+            html.push("<ul>" + ulItems.map(function (item) {
+              return "<li>" + renderInline(escapeHtml(item)) + "</li>";
+            }).join("") + "</ul>");
+            continue;
+          }
+
+          // Ordered list
+          if (/^\s*\d+\.\s+/.test(line)) {
+            var olItems = [];
+            while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+              olItems.push(lines[i].replace(/^\s*\d+\.\s+/, ""));
+              i++;
+            }
+            html.push("<ol>" + olItems.map(function (item) {
+              return "<li>" + renderInline(escapeHtml(item)) + "</li>";
+            }).join("") + "</ol>");
+            continue;
+          }
+
+          // Paragraph — consecutive non-blank, non-special lines
+          var paraLines = [];
+          while (
+            i < lines.length &&
+            !/^\s*$/.test(lines[i]) &&
+            !/^```/.test(lines[i]) &&
+            !/^(#{1,6})\s+/.test(lines[i]) &&
+            !/^(-{3,}|\*{3,})\s*$/.test(lines[i]) &&
+            !/^>\s?/.test(lines[i]) &&
+            !/^\s*[-*]\s+/.test(lines[i]) &&
+            !/^\s*\d+\.\s+/.test(lines[i])
+          ) {
+            paraLines.push(lines[i]);
+            i++;
+          }
+          if (paraLines.length) {
+            html.push("<p>" + renderInline(escapeHtml(paraLines.join(" "))) + "</p>");
+          } else {
+            i++; // safety: avoid infinite loop on an unhandled line
+          }
+        }
+
+        return html.join("\n");
+      }
+
+      var params = new URLSearchParams(window.location.search);
+      var file = params.get("file") || "README.md";
+      document.getElementById("doc-title").textContent = file;
+      document.title = file + " — Rising Lower Thirds";
+
+      fetch(file, { cache: "no-store" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.text();
+        })
+        .then(function (md) {
+          document.getElementById("doc-content").innerHTML = renderMarkdown(md);
+          document.getElementById("doc-meta").innerHTML =
+            "Source: <code>" + file + "</code> — " +
+            '<a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/' + file + '" target="_blank" rel="noopener">view on GitHub</a>';
+        })
+        .catch(function (err) {
+          document.getElementById("doc-content").innerHTML =
+            "<p>❌ Couldn't load <code>" + escapeHtml(file) + "</code>: " + escapeHtml(err.message) + "</p>";
+        });
+    })();
+  </script>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

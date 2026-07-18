@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cost Analysis — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>💰 Cost Analysis</h1>
+    <p>
+      What each environment actually needs as input, what it produces, and
+      roughly how long it takes to build (one-time) versus use (per project)
+      — plus the only two places real money changes hands in this whole
+      system. See
+      <a href="index.html">index.html</a>'s "Same animation, three different
+      environments" section for how the outputs differ visually; this page is
+      about effort and cost specifically.
+    </p>
+
+    <div class="card-panel">
+      <h2>📊 Per-environment breakdown</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Environment</th>
+              <th>Input needed</th>
+              <th>Output</th>
+              <th>Time to build (one-time)</th>
+              <th>Time to use (per project)</th>
+              <th>Real cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>🎥 Recorded Video</td>
+              <td>Icon/text × 3 (typed or defaults)</td>
+              <td>Downloadable WebM/MP4 file</td>
+              <td>Already built</td>
+              <td>~10 seconds — type, click Record, download</td>
+              <td>$0 — runs entirely in your browser</td>
+            </tr>
+            <tr>
+              <td>📡 Live Overlay</td>
+              <td>Icon/text × 3</td>
+              <td>Live transparent browser-source layer</td>
+              <td>Already built</td>
+              <td>~1 minute — add as an OBS/vMix Browser Source pointed at the URL</td>
+              <td>$0</td>
+            </tr>
+            <tr>
+              <td>🧭 Explainer</td>
+              <td>Icon/text × 3, plus a background image</td>
+              <td>Interactive teaching page / standalone HTML export</td>
+              <td>Already built (background generated once)</td>
+              <td>~10 seconds if reusing the existing background; ~2–5 minutes if generating a new content-matched one (write the prompt, generate, review)</td>
+              <td>~$0.08 per background image generated (see below) — $0 to reuse an existing one</td>
+            </tr>
+            <tr>
+              <td>🎨 Canva (manual)</td>
+              <td>A background image + one image per lower-third label, all generated separately</td>
+              <td>A Canva design/video export</td>
+              <td>N/A — no code, but each project repeats the same 5 manual steps (see <a href="canva-guide.html">canva-guide.html</a>)</td>
+              <td>~15–30 minutes per project — generate ~4 images, place, time, and animate each label by hand</td>
+              <td>~$0.30–0.35 in generation (4 images × ~$0.08) + optional Canva Pro subscription if you need premium assets/export formats</td>
+            </tr>
+            <tr>
+              <td>🚀 Hosted API</td>
+              <td>JSON body — <code>icon1/text1/icon2/text2</code> (2-card only currently)</td>
+              <td><code>video/webm</code> bytes over HTTP</td>
+              <td>Already built (~a Go file + Dockerfile + Fly config)</td>
+              <td>One HTTP request — a few seconds</td>
+              <td>Fly.io hosting (see below) — no per-request charge beyond that</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>💵 Where money actually gets spent</h2>
+      <p>Everything above is free static hosting and browser-side computation except two things:</p>
+      <ol>
+        <li>
+          <strong>Image generation</strong> (Gemini "Nano Banana" via fal.ai's
+          <code>nano-banana-2</code> endpoint, used for backgrounds). Priced
+          per output megapixel, roughly <strong>$0.0398/MP</strong> — this
+          project's 1920×1080 background is ~2.07MP, so about
+          <strong>$0.08 per generation</strong>. You only pay when you
+          actually generate a new image; reusing
+          <code>assets/k8s-explainer-background.png</code> (or any background
+          you've already generated) costs nothing.
+        </li>
+        <li>
+          <strong>Fly.io hosting</strong> for the API in <code>server/</code>
+          (<code>lower-thirds-api.fly.dev</code>). The machine is configured
+          to auto-stop when idle and auto-start on request
+          (<code>auto_stop_machines</code>/<code>min_machines_running: 0</code>
+          in <code>server/fly.toml</code>), so cost scales with actual usage
+          rather than running 24/7 — exact numbers depend on your Fly.io plan
+          and request volume, which this page can't state precisely without
+          checking live billing; check the
+          <a href="https://fly.io/dashboard" target="_blank" rel="noopener">Fly.io dashboard</a>
+          for your account's current usage.
+        </li>
+      </ol>
+      <p>
+        Everything else — the static site (GitHub Pages), the animation
+        engine, the Builder tools, the standalone HTML export, and driving any
+        of it via the URL API or a browser-automation MCP client — costs
+        nothing to run, no matter how many times you use it.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤔 Which is cheapest for your situation</h2>
+      <ul>
+        <li><strong>Reusing existing content</strong> (same background, new labels) → free, any environment, seconds.</li>
+        <li><strong>New content, need a video file</strong> → 🎥 Recorded Video + a new background (~$0.08, once).</li>
+        <li><strong>New content, need it live</strong> → 📡 Live Overlay (no background needed at all — it must stay transparent).</li>
+        <li><strong>New content, need to explain/teach it</strong> → 🧭 Explainer + a new content-matched background (~$0.08).</li>
+        <li><strong>No code, want to hand-tweak in Canva</strong> → 🎨 the manual path — most generation cost (~$0.30+) and most time (~15–30 min), because nothing is reused/automated.</li>
+      </ul>
+      <p>
+        See <a href="proposed-solution.html">proposed-solution.html</a> for a
+        proposal that would collapse most of this into a single agent request.
+      </p>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>

@@ -284,6 +284,124 @@ input[type="range"] {
   color: var(--accent);
 }
 
+/* Nav dropdown (e.g. Outputs -> Recorded Video/Live Overlay/...) — hover on
+   desktop, click toggle for touch/keyboard via the "open" class. The group
+   label itself (.nav-dropdown-label) isn't a page, just the toggle. */
+.nav-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-dropdown-label {
+  background: none;
+  border: none;
+  font-family: inherit;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+}
+
+.nav-dropdown-label:hover,
+.nav-dropdown-label.active {
+  color: var(--accent);
+}
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  min-width: 220px;
+  z-index: 20;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu {
+  display: flex;
+}
+
+.nav-dropdown-menu a {
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.nav-dropdown-menu a:hover {
+  background: var(--bg);
+}
+
+/* Nav search — title-only match over pages/docs, dropdown of results */
+.nav-search {
+  position: relative;
+}
+
+.nav-search input[type="search"] {
+  width: 160px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+.nav-search input[type="search"]:focus {
+  width: 220px;
+  outline: none;
+  border-color: var(--accent);
+}
+
+.nav-search-results {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  min-width: 240px;
+  max-width: 320px;
+  z-index: 20;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-search-results.open {
+  display: flex;
+}
+
+.nav-search-results a {
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-search-results a:hover {
+  background: var(--bg);
+}
+
+.nav-search-empty {
+  padding: 8px 10px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
 /* Shared footer, injected by assets/js/nav.js */
 .site-footer {
   border-top: 1px solid var(--border);

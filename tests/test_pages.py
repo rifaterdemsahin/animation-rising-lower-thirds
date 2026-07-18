@@ -32,9 +32,14 @@ PAGES = [
     ("video-recorded.html", ["<title>Recorded Video", 'id="record-btn"', 'id="render-canvas"']),
     ("video-live.html", ["<title>Live Overlay", 'id="play-btn"', 'id="stage"']),
     ("explainer.html", ["<title>Explainer", "Kubernetes Test Cluster", 'id="play-btn"']),
+    ("canva-guide.html", ["<title>Canva Guide", "canva.link", "Rise"]),
     ("mcp-guide.html", ["<title>API Guide", "lower-thirds-api.fly.dev", "render_lower_third"]),
     ("recommendation.html", ["<title>Recommendations", "ffmpeg-usage"]),
     ("master-spec.html", ["<title>Master Spec", 'id="note-taker"']),
+    ("cost-analysis.html", ["<title>Cost Analysis", "nano-banana-2", "Fly.io"]),
+    ("proposed-solution.html", ["<title>Proposed Solution", "generate_background", "render_mixed_video"]),
+    ("markdown_renderer.html", ["<title>Docs", 'id="doc-content"', "renderMarkdown"]),
+    ("sitemap.html", ["<title>Sitemap", "markdown_renderer.html", "MASTER_SPEC.md"]),
 ]
 
 # Live checks against the hosted Go API (see server/), not the local static

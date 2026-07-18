@@ -150,6 +150,66 @@
         <li>🗂️ Read the full spec — <a href="master-spec.html">master-spec.html</a></li>
       </ul>
     </div>
+
+    <div class="card-panel">
+      <h2>🔬 Same animation, three different environments</h2>
+      <p>
+        All three outputs start from the <strong>same input</strong> (the same
+        three icon/text fields, the same Kubernetes example by default) and run
+        through the <strong>same motion math</strong> —
+        <code>springState()</code> in <code>assets/js/lower-thirds.js</code>
+        never changes between them. What comes out the other side looks
+        similar at a glance, but each environment has a genuinely different
+        <em>job</em>, so each one needs different things to do that job —
+        that's why they're not just the same page with a different button.
+      </p>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr><th></th><th>🎥 Recorded Video</th><th>📡 Live Overlay</th><th>🧭 Explainer</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Input</strong></td>
+              <td>Typed icon/text × 3 (Kubernetes default)</td>
+              <td>Same</td>
+              <td>Same, plus per-stage timing (<code>0</code>/<code>3200</code>/<code>6400ms</code> instead of together)</td>
+            </tr>
+            <tr>
+              <td><strong>Rendering path</strong></td>
+              <td>Canvas 2D — <code>drawCanvasFrame()</code></td>
+              <td>DOM/CSS — <code>LowerThirds.mount()</code></td>
+              <td>DOM/CSS <code>mount()</code> + a background layer, SVG flow arrows, and captions</td>
+            </tr>
+            <tr>
+              <td><strong>Output</strong></td>
+              <td>A downloadable video file (WebM/MP4) — a portable artifact</td>
+              <td>A live, real-time transparent layer — not a file, a feed</td>
+              <td>An interactive page a person clicks through themselves</td>
+            </tr>
+            <tr>
+              <td><strong>Background</strong></td>
+              <td>Baked in — painted onto the canvas every frame</td>
+              <td>None, deliberately — must stay transparent</td>
+              <td>Yes — content-matched to the labels, for standalone context</td>
+            </tr>
+            <tr>
+              <td><strong>What it needs that the others don't</strong></td>
+              <td><code>canvas.captureStream()</code> + <code>MediaRecorder</code>; everything has to be pixel-baked because the output file has to be self-contained after the browser closes</td>
+              <td>Genuine transparency, so OBS/vMix can composite it over whatever video is already playing underneath</td>
+              <td>Captions, arrows, and the Builder's parameter/position tools — its job is explaining a concept, not feeding another system</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        In short: the <em>animation</em> is one shared thing: three outputs
+        because three different downstream <em>jobs</em> — editing into a
+        timeline, compositing live, or teaching someone standing alone — each
+        impose their own requirements on how that same motion has to be
+        packaged.
+      </p>
+    </div>
   </main>
 
   <script src="assets/js/lower-thirds.js"></script>

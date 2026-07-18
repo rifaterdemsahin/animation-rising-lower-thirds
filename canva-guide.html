@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canva Guide — Rising Lower Thirds</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main>
+    <h1>🎨 Implement This Manually in Canva</h1>
+    <p>
+      A no-code path to the same look: instead of the generator engine in
+      <a href="explainer.html">explainer.html</a>, build the background and the
+      lower-third labels as images, then place, time, and animate them by hand
+      in Canva. Useful if you want to hand-tweak the design directly, or you're
+      handing this off to someone who isn't going to touch code.
+    </p>
+
+    <div class="card-panel">
+      <h2>🎬 Demo</h2>
+      <video controls style="width: 100%; border-radius: 12px; display: block;">
+        <source src="assets/manual_animation-rising-lower-thirds%20canva%20template.mp4" type="video/mp4">
+        Your browser doesn't support embedded video —
+        <a href="assets/manual_animation-rising-lower-thirds%20canva%20template.mp4">download it directly</a>.
+      </video>
+      <p>
+        <strong>Example Canva design:</strong>
+        <a href="https://canva.link/nqqjs8gf15aaj5r" target="_blank" rel="noopener">canva.link/nqqjs8gf15aaj5r</a>
+        — open it, duplicate it into your own account, and use it as the
+        starting template for the steps below.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🪜 Steps</h2>
+
+      <h3>1. Create the background image in Gemini</h3>
+      <p>
+        Use the same content-matched prompt this project uses for
+        <code>explainer.html</code> — the scene layout should mirror the actual
+        flow your lower thirds describe (e.g. cluster → gateway → pod), not just
+        be generically on-theme. The exact prompt that produced this project's
+        background is documented on
+        <a href="explainer.html">explainer.html</a> (🖼️ Background image credit
+        panel) and in
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a>
+        §10 — copy it as a starting point and adjust for your own content.
+        Generate at 1920×1080 (16:9), and leave the bottom ~20–25% of the frame
+        darker/clearer — that's where your labels will sit. Upload the result
+        as your Canva design's background.
+      </p>
+
+      <h3>2. Create the lower thirds in Gemini</h3>
+      <p>
+        Generate each label as its own image (icon + text on a rounded pill),
+        matching this project's visual spec from
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/problem.md">problem.md</a>:
+        rounded rectangle, <code>24–30px</code> corner radius, background
+        <code>#0B1B1E</code> at 85% opacity, a cyan (<code>#00D2D2</code>) icon
+        on the left, white serif text on the right. Generate one image per
+        label (transparent background) so you can place and time each one
+        independently in Canva — don't bake all three into a single image.
+      </p>
+
+      <h3>3. Place the lower thirds in the correct places</h3>
+      <p>
+        Don't eyeball it — <a href="explainer.html">explainer.html</a>'s
+        🏗️ Builder section computes exact x/y pixel coordinates (at the
+        background image's native 1920×1080) for wherever your text/emoji
+        fields currently are, and lets you drag X/Y sliders to preview custom
+        placement before you commit to it. Match those numbers to Canva's
+        position fields (select an element → the Position panel shows X/Y) for
+        pixel-accurate placement instead of guessing.
+      </p>
+
+      <h3>4. Set the timing for the lower thirds</h3>
+      <p>
+        This project's default three-stage timing is <code>0ms</code>,
+        <code>3200ms</code>, and <code>6400ms</code> from playback start (each
+        card settles, then holds ~2.2s before the next one rises — see
+        <a href="https://github.com/rifaterdemsahin/animation-rising-lower-thirds/blob/main/MASTER_SPEC.md">MASTER_SPEC.md</a>
+        §3.1). In Canva, select each label on the timeline and set its entrance
+        to start at the matching second (<code>0s</code>, <code>3.2s</code>,
+        <code>6.4s</code>) so the pacing matches.
+      </p>
+
+      <h3>5. Set up the animations on enter (rise animation)</h3>
+      <p>
+        Select each label → <strong>Animate</strong> → choose
+        <strong>Rise</strong> from Canva's entrance animations. This is the
+        closest built-in match to the site's actual motion (a damped-spring
+        rise, per <code>problem.md</code>: amplitude 120px, ζ=0.5, ωn=11) —
+        Canva's Rise won't reproduce the exact overshoot/bounce physics, but it
+        gets the same "springs up from below and settles" read. Apply it to
+        each of the three labels individually so they trigger at the times set
+        in step 4, not all at once.
+      </p>
+    </div>
+
+    <div class="card-panel">
+      <h2>🤔 When to use this vs. the generator</h2>
+      <ul>
+        <li>
+          <strong>Use this Canva path</strong> if you want to hand-edit the
+          design directly, need it inside an existing Canva project/brand kit,
+          or are handing off to someone non-technical.
+        </li>
+        <li>
+          <strong>Use <a href="explainer.html">explainer.html</a>/<a href="video-recorded.html">video-recorded.html</a>/<a href="video-live.html">video-live.html</a></strong>
+          if you want the exact coded spring physics, want to type new text and
+          get an instant result, or need a downloadable video/live overlay —
+          see <a href="mcp-guide.html">mcp-guide.html</a> for driving those
+          programmatically too.
+        </li>
+      </ul>
+    </div>
+  </main>
+  <script src="assets/js/nav.js"></script>
+</body>
+</html>
